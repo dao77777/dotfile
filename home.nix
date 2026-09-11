@@ -12,39 +12,80 @@
     VISUAL = "nvim";
   };
 
-  # 声明要安装的所有包
+  # 声明要安装的所有包(分类与 README.md 一致)
   home.packages = with pkgs; [
-    # 日常工具
+    # ── 文件系统:浏览与管理 ──
+    eza
+    dua
+    duf
+
+    # ── 文件系统:搜索与查找 ──
+    fd
     ripgrep
     fzf
-    fd
-    eza
-    bat
 
-    # 开发工具
+    # ── 文件系统:处理与转换 ──
+    curl
+    wget
+    jq
+    yq
+    p7zip
+
+    # ── 文件系统:渲染与预览 ──
+    bat
+    poppler-utils # PDF(pdftoppm/pdftotext)
+    resvg         # SVG
+    ffmpeg        # 音视频
+    imagemagick   # 图片(magick/convert)
+
+    # ── 开发 ──
     git
+    gh
+    lazygit
     nodejs
     go
     rustup
 
-    # 其他你需要的包...
-    yazi
+    # ── Shell 与系统 ──
     pfetch
   ];
+
+  # ══════════════════════════════════════
+  # ── 文件系统:浏览与管理 ──
+  # ══════════════════════════════════════
+
+  # yazi 文件管理器: y 命令退出后 cd 到浏览时所在目录
+  programs.yazi = {
+    enable = true;
+    shellWrapperName = "y";
+  };
+
+  # 智能目录跳转
+  programs.zoxide = {
+    enable = true;
+    enableZshIntegration = true;
+  };
+
+  # ══════════════════════════════════════
+  # ── Shell 与系统 ──
+  # ══════════════════════════════════════
 
   # 管理 dotfiles
   programs.zsh = {
     enable = true;
     enableCompletion = true;
+    defaultKeymap = "viins";  # vi 模式: Esc 进入 normal 模式
     oh-my-zsh = {
       enable = true;
       theme = "";  # 由 starship 接管提示符
     };
     shellAliases = {
-      # ls 系列(基于 eza)
+      # ls 系列(基于 eza) 2x2 矩阵: 横向/竖向 × 隐藏
       ls = "eza --icons --group-directories-first";
+      l = "eza --icons --group-directories-first";
       ll = "eza -l --icons --group-directories-first --git";
-      la = "eza -la --icons --group-directories-first --git";
+      la = "eza -a --icons --group-directories-first";
+      lla = "eza -la --icons --group-directories-first --git";
       lt = "eza -l --icons --tree --level=2";
 
       # cat 系列(基于 bat)
@@ -57,7 +98,7 @@
       bt = "btop";
 
       # 文件管理
-      y = "yazi";
+      # y 由 programs.yazi.shellWrapperName 提供(退出时 cd 到浏览目录)
 
       # 模糊查找
       fzfp = "fzf --preview 'bat --color=always --style=numbers --line-range=:300 {}'";
@@ -91,31 +132,15 @@
       vim = "nvim";
     };
     initContent = ''
+      # oh-my-zsh 会执行 bindkey -e 覆盖 vi 模式,这里在其后重新启用
+      bindkey -v
+
       # 每次打开交互式 shell 时打印系统信息(避免在嵌套 shell 中重复打印)
       if [[ -o interactive && -z "$PFETCH_SHOWN" ]]; then
         pfetch
         export PFETCH_SHOWN=1
       fi
     '';
-  };
-
-  programs.git = {
-    enable = true;
-    settings = {
-      user = {
-        name = "dao77777";
-        email = "dao77777@qq.com";
-      };
-      safe = {
-        directory = "*";
-      };
-    };
-  };
-
-  # 智能目录跳转
-  programs.zoxide = {
-    enable = true;
-    enableZshIntegration = true;
   };
 
   # 现代化跨 shell 提示符
@@ -197,6 +222,28 @@
     '';
   };
 
+  # ══════════════════════════════════════
+  # ── 开发 ──
+  # ══════════════════════════════════════
+
+  programs.git = {
+    enable = true;
+    settings = {
+      user = {
+        name = "dao77777";
+        email = "dao77777@qq.com";
+      };
+      safe = {
+        directory = "*";
+      };
+    };
+  };
+
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;
+  };
+
   # Neovim 配置 (Catppuccin Frappe 主题)
   programs.neovim = {
     enable = true;
@@ -222,7 +269,11 @@
   '';
   
   # 把 npm 全局 bin 目录加到 PATH
-  home.sessionPath = [ "$HOME/.npm-global/bin" ];
+  home.sessionPath = [ "$HOME/.npm-global/bin" "$HOME/.local/bin" ];
+
+  # ══════════════════════════════════════
+  # ── Nix 生态 ──
+  # ══════════════════════════════════════
 
   # 让 Home Manager 管理自己
   programs.home-manager.enable = true;
