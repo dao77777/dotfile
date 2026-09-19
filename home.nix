@@ -45,6 +45,7 @@
     nodejs
     go
     rustup
+    process-compose
 
     # ── Shell 与系统 ──
     pfetch

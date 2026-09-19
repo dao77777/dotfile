@@ -1,6 +1,6 @@
 # 当前环境软件清单
 
-> 由 home-manager 管理（`home.nix` 的 `home.packages` + `programs.*` 模块），2026-09-11 整理。
+> 由 home-manager 管理（`home.nix` 的 `home.packages` + `programs.*` 模块），2026-09-19 整理。
 
 ## 文件系统
 
@@ -55,6 +55,12 @@
 | rustup | Rust 全家桶（rustc/cargo/rust-analyzer/rustfmt/clippy） |
 | nvim | 编辑器 |
 | direnv | 目录级环境自动切换（含 nix-direnv） |
+
+## 进程与服务管理
+
+| 软件 | 用途 |
+|---|---|
+| process-compose | 多进程编排（`process-compose up/down/restart`，带 TUI 日志与状态） |
 
 ## Shell 与系统
 
