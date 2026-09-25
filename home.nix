@@ -42,7 +42,10 @@
     git
     gh
     lazygit
-    nodejs
+    nodejs        # Node.js 通用版本(nixpkgs 默认 nodejs,当前 24.x LTS)
+    pnpm          # Node 包管理器(含 pnpx,由 Nix 独立提供)
+    yarn-berry    # Yarn 4.x(含 yarn/yarnpkg)
+    bun           # Bun 运行时/包管理器
     go
     rustup
     process-compose
@@ -259,18 +262,49 @@
     '';
   };
 
-  # 配置 npm 全局安装路径
+  # npm 全局安装路径
+  # .npmrc 由本模块生成，不要再手写 home.file.".npmrc"：
+  # 同一文件两个写入者会被 types.lines 拼接，且先后顺序不受控
   programs.npm = {
     enable = true;
+    # node/npm 由 home.packages 的 nodejs 统一提供；
+    # 不设 null 的话该模块会默认再注入一份 pkgs.nodejs，造成重复
+    package = null;
+    # 全局包安装目录（同时决定全局 bin 目录 <prefix>/bin）
+    settings.prefix = "${config.home.homeDirectory}/.npm-global";
   };
-  
-  # 手动配置 npm 前缀
-  home.file.".npmrc".text = ''
-    prefix = ${config.home.homeDirectory}/.npm-global
-  '';
-  
-  # 把 npm 全局 bin 目录加到 PATH
-  home.sessionPath = [ "$HOME/.npm-global/bin" "$HOME/.local/bin" ];
+
+  # pnpm 的包仓库固定在标准位置 ~/Library/pnpm/store。
+  # 不写进 .npmrc：store-dir 是 pnpm 专有键，npm 不认，会每次命令都报
+  # "Unknown user config" 警告。改由 pnpm 自己管理其可写全局配置，重建环境时执行：
+  #   pnpm config set --global store-dir ~/Library/pnpm/store
+  # 注意值必须是「绝对路径」：pnpm 对 ~ 开头的值会先探测该目录能否硬链接，
+  # 探测失败就退化为在项目的某个祖先目录下另建 .pnpm-store（受限环境里会污染 ~/Code）；
+  # 绝对路径直接使用，跳过探测。
+
+  # ══════════════════════════════════════
+  # ── PATH ──
+  # ══════════════════════════════════════
+
+  # 【临时妥协 2026-09-25】把官方预编译 Node 置顶，覆盖 nixpkgs 构建的 node。
+  # 妥协原因：DeepSeek Harness 源码启动（pnpm dsh）在 app-boot 里用原生插件
+  # node-addon-require-builtin 扫描 Node 二进制的 arm64 机器码，定位
+  # PrincipalRealm::builtin_module_require 的 getter；nixpkgs 的 cc-wrapper
+  # 默认全局加 -fno-omit-frame-pointer（见 pkgs/build-support/cc-wrapper/default.nix），
+  # 该 getter 因而多出栈帧 prologue/epilogue，不再是插件认识的
+  # "ldr-x0-[this-imm]-ret" 模式，启动即报 Unsupported/no-getter；
+  # 官方 Node 省略 frame pointer，可正常匹配。证据见
+  # ~/Code/deepseek-harness/tmp/dsh-restart.log 与 nixpkgs 构建反汇编对比。
+  # 做法：`~/.local/share/node` 为手动解压的官方 tarball
+  # （-> node-v24.19.0-darwin-arm64），仅置顶以覆盖 node 的解析，
+  # 不改变 Nix 提供的 nodejs/pnpm 本身（pnpm 会从 PATH 取 node 执行脚本）。
+  # 计划：待 Node 版本升级（或 nixpkgs / node-addon-require-builtin 修复）后，
+  # 先验证 `pnpm dsh` 源码启动不再报错，再删除本条目与 ~/.local/share/node，回归纯 Nix。
+  home.sessionPath = [
+    "$HOME/.local/share/node/bin"
+    "$HOME/.npm-global/bin"
+    "$HOME/.local/bin"
+  ];
 
   # ══════════════════════════════════════
   # ── Nix 生态 ──
