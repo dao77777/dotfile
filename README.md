@@ -58,6 +58,8 @@
 | rustup | Rust 全家桶（rustc/cargo/rust-analyzer/rustfmt/clippy） |
 | nvim | 编辑器 |
 | direnv | 目录级环境自动切换（含 nix-direnv） |
+| sops | 密钥加密（只加密结构化文件的值，密文可入 git）；后端用 age |
+| age | 现代 GPG（含 `age` / `age-keygen`）；私钥在本机 `~/.config/sops/age/keys.txt`，跨机只用公钥 |
 
 ## 进程与服务管理
 
@@ -104,6 +106,10 @@
 
 ## 备注
 
+- **密钥：sops + age**（跨机器方案见 `~/Code/tmp/docs/sops-age-secrets.md`）
+  - 加密库在 `~/Code/vault`（私有 git），存的是密文；明文永不入库
+  - age 私钥在本机 `~/.config/sops/age/keys.txt`（`chmod 600`），**永不进 git、永不外传**；换机器时只需把新机器的**公钥**加进 `vault/.sops.yaml`
+  - 【macOS 坑】sops 找默认密钥走 Go 的 `os.UserConfigDir()`，darwin 上是 `~/Library/Application Support`，不是 `~/.config`；因此 `home.nix` 里用 `home.sessionVariables.SOPS_AGE_KEY_FILE` 显式指到 `~/.config/sops/age/keys.txt`
 - CLI 全部走 Nix（`~/.nix-profile`），无 Homebrew
 - Node 使用 nixpkgs 通用属性 `nodejs`（当前 24.x LTS），随 nixpkgs-unstable 自动跟随，不再手动指定版本
 - corepack 随 nodejs 24.x 提供；上游自 Node 25+ 起移除

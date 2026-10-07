@@ -50,6 +50,10 @@
     rustup
     process-compose
 
+    # ── 开发:密钥管理 ──
+    sops # 只加密结构化文件的值，密文可入 git（加密后端交给 age）
+    age # 现代 GPG（提供 age / age-keygen）；私钥放 ~/.config/sops/age/keys.txt
+
     # ── Shell 与系统 ──
     pfetch
   ];
@@ -305,6 +309,20 @@
     "$HOME/.npm-global/bin"
     "$HOME/.local/bin"
   ];
+
+  # ══════════════════════════════════════
+  # ── 环境变量 ──
+  # ══════════════════════════════════════
+
+  # 告诉 sops 去哪找 age 私钥。
+  # 【macOS 坑】sops 找默认密钥用的是 Go 的 os.UserConfigDir()，
+  # 在 darwin 上返回 ~/Library/Application Support，而不是文档里到处写的 ~/.config。
+  # 实测：密钥只放 ~/.config/sops/age/ 时 sops -d 报 “identity did not match”，
+  # 放到 ~/Library/Application Support/sops/age/ 才能不配置直接跑。
+  # 这里显式指路到跨平台一致的 ~/.config，避免密钥散落在应用数据目录里。
+  # 注意：这只是「路径」，不是密钥本身，进 Nix store 无风险。
+  home.sessionVariables.SOPS_AGE_KEY_FILE =
+    "${config.home.homeDirectory}/.config/sops/age/keys.txt";
 
   # ══════════════════════════════════════
   # ── Nix 生态 ──
