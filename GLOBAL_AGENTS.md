@@ -5,14 +5,19 @@
 > 软链：`~/.pi/agent/AGENTS.md` · `~/.codex/AGENTS.md` · `~/.config/opencode/AGENTS.md` · `~/.claude/CLAUDE.md`
 > 优先级：项目 `AGENTS.md` > `~/Code/AGENTS.md` > **本文件**
 
-## 去哪找
+## 本机拓扑
 
-| 要什么 | 去哪 |
-| --- | --- |
-| 装 CLI、改别名 / PATH / shell 行为 | `~/.config/home-manager/home.nix` |
-| 写代码、起 dev server | `~/Code/`（先读 `~/Code/AGENTS.md`） |
-| 密钥 / 令牌 / 密码 | `~/Code/vault` |
-| 某选择**为什么**是这样 | `~/.config/home-manager/docs/` |
+| 位置 | 是什么 | 什么时候去 |
+| --- | --- | --- |
+| `~/.config/home-manager/` | 环境正本：CLI / 别名 / PATH / shell 都由它生成 | 装工具、改 shell 行为 |
+| `~/Code/<project>/` | 代码项目 | 写代码、起 dev server（先读 `~/Code/AGENTS.md`） |
+| `~/Code/vault/` | 密钥库（私有 git，只存密文） | 要密钥 / 令牌 / 密码 |
+| `~/.config/<tool>/` | 工具自己的配置 | 改 git / nvim / direnv… |
+| `~/Code/tmp/` | 临时产物与调研文档 | 放一次性的东西 |
+
+> 完整目录树（macOS 目录、agent 数据目录、Nix profile 位置）见
+> `~/.config/home-manager/docs/design/layout.md`。
+> 本文件**只能用绝对路径**（它被软链到多处，相对链接会断）。
 
 ## 硬约束
 

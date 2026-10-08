@@ -38,8 +38,14 @@
 | 顺便一提 | 流量走 Clash Party（mihomo）的 TUN，`route get` 会看到 `utun1500` |
 
 ## 待定 / 未决
-
 - `go` / `rustup` 无活跃项目使用，是否移除？（装了备用）
 - 是否给 `~/.ssh/config` 加 `Host github.com → ssh.github.com:443`？
   目前判断**收益不大**：根因在代理规则，SSH 走哪个端口都可能被兜底链吃掉
 - `home-manager news` 里有 297 条未读，未逐条评估
+
+## 文档自身的坑
+
+| 坑 | 说明 |
+| --- | --- |
+| **`GLOBAL_AGENTS.md` 不能用相对链接** | 它被软链到 `~/.pi/agent/AGENTS.md` 等 4 处；相对链接会按**软链所在目录**解析（`~/.pi/agent/docs/…`）→ 断。只能用 `~` 绝对路径 |
+| `AGENTS.md` 可以用相对链接 | 它不被软链，只在本仓库内读 |
