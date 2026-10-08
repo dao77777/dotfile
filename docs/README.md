@@ -1,61 +1,61 @@
 # docs
 
-本仓库的**决策记录**与**设计说明**。
+本仓库的**顶层设计**与其**关键决策**。
 
-> 规则在 [`../AGENTS.md`](../AGENTS.md)（本仓库）+ [`../GLOBAL_AGENTS.md`](../GLOBAL_AGENTS.md)（全局）；
-> 清单在 [`../README.md`](../README.md)。**"为什么这么做"全在这里。**
+```
+docs/
+├── design/        顶层设计：环境应该长成什么样     → "是什么、怎么组织"
+├── decision/      落地时的主要矛盾与处理方式       → "为什么是这样"
+└── appendix.md    零散备忘（故意不分类）
+```
 
-## 两个目录
+**判断一条信息往哪写**：是什么 → `design/`；为什么 → `decision/`；拿不准 → `appendix.md`。
+规则在 [`../AGENTS.md`](../AGENTS.md)（本仓库）+ [`../GLOBAL_AGENTS.md`](../GLOBAL_AGENTS.md)（全局）。
 
-| 目录 | 放什么 | 回答的问题 |
+## 顶层设计
+
+| 文档 | 覆盖 | 什么时候看 |
 | --- | --- | --- |
-| [`decision/`](decision/) | 选型、取舍、妥协、代价、复查条件 | *为什么是现在这样？* |
-| [`design/`](design/) | 结构图、数据流、硬规矩、操作步骤 | *它长什么样、怎么用？* |
+| [design/overview.md](design/overview.md) | ⭐ 目标、三层结构、设计原则、管/不管 | **先读这篇** |
+| [design/layout.md](design/layout.md) | 目录结构与归属边界 | 不知道某个东西该放哪 |
+| [design/packages.md](design/packages.md) | 装了哪些工具（分类清单） | 想知道有什么可用 |
+| [design/shell.md](design/shell.md) | shell 组织、加载链、别名 | 改 zsh / 别名 |
+| [design/secrets.md](design/secrets.md) | 密钥体系 | 要密钥、换机器 |
 
-同题**成对**出现，例如：
+## 关键决策
 
-```
-decision/secrets-sops-age.md   为什么选 sops + age
-design/secrets-sops-age.md     密钥体系的具体结构与用法
-```
+| 文档 | 矛盾 | 所属设计 |
+| --- | --- | --- |
+| [decision/runtime-node.md](decision/runtime-node.md) | nixpkgs 的 node 跑不了 `pnpm dsh`，官方的可以 | packages / shell |
+| [decision/npm-pnpm-paths.md](decision/npm-pnpm-paths.md) | npm 全局包与 pnpm store 都不能用默认位置 | packages |
+| [decision/secrets-sops-age.md](decision/secrets-sops-age.md) | 密钥既不能进 git/store/env，又要跨机器且能无人取用 | secrets |
 
-目录名已经表达了类型，**文件名不再加前缀**。
+## 写作规范
 
-## 索引
-
-| 文档 | 什么时候看 |
+| 规范 | 说明 |
 | --- | --- |
-| [design/layout.md](design/layout.md) | 想知道某个东西该放哪、归谁管 |
-| [design/shell-config.md](design/shell-config.md) | 改 zsh / 别名 / 加载顺序 |
-| [design/secrets-sops-age.md](design/secrets-sops-age.md) | 要密钥、换机器、加密钥 |
-| [decision/runtime-node.md](decision/runtime-node.md) | node 版本怪异、`pnpm dsh` 启动失败 |
-| [decision/packages-npm-pnpm.md](decision/packages-npm-pnpm.md) | 装全局包、pnpm 报 store 相关错 |
-| [decision/secrets-sops-age.md](decision/secrets-sops-age.md) | 想知道密钥为什么这么放、什么时候该换方案 |
+| **一屏能看完** | 一图一表优先于成段文字；超过一屏就该拆 |
+| 主次分明 | 结论在前，细节在后；关键项用 ⚠️ / **粗体**标，但别滥用 |
+| 不写默认知识 | 默认就该知道的 → 不要写；拿不准 → 丢 [`appendix.md`](appendix.md) |
+| **不复制** | 同一事实只出现一处，其余用链接 |
+| 决策必写两条 | **代价** 与 **复查条件** —— 缺了它们，临时妥协会变成永久负债 |
 
-## 骨架
-
-### `decision/`
+### 骨架
 
 ```md
 # 决策：<一句话结论>
-> 状态: 生效中 / ⚠️ 临时妥协（计划移除） / 已废弃 · 起始 YYYY-MM · 落点: home.nix 的哪一段
+> 状态 · 起始日期 · 所属设计 · 落点
 
-## 问题        一句话说清要解决什么
-## 决定        最终怎么做的（给最小可读的证据：那几行配置 / 那张图）
-## 理由        为什么，含可复现的证据（命令、日志路径）
-## 代价        这个选择带来的坏处
-## 复查条件    什么情况下该把它推翻（含具体回退动作）
+## 矛盾     冲突在哪（表格式对照最好）
+## 处理     怎么做的（给最小可读的证据）
+## 为什么   为什么是它，其余候选为何落选
+## 代价     坏了什么（必须写）
+## 复查条件 什么情况下推翻它 + 具体回退动作
 ```
-
-**"代价"和"复查条件"最容易被忽略，也最重要** —— 没有它们，临时妥协会变成永久负债。
-
-### `design/`
 
 ```md
 # 设计：<对象>
-> 状态 · 落点
+> 顶层设计见 overview.md
 
-结构图 → 各层职责表 → 数据流 → 硬规矩
+结构图 → 各层职责 / 归属 → 操作或数据流 → 硬规矩
 ```
-
-两种都要求**一屏能看完**。
