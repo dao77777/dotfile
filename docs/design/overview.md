@@ -1,6 +1,7 @@
 # 顶层设计
 
 > ⭐ **先读这篇。**其余 design 文档都是它的展开；decision 文档是落地时对它的取舍。
+> 本机目录拓扑（全机信息）在 `~/.config/home-manager/GLOBAL_AGENTS.md`。
 
 ## 目标（按优先级）
 
@@ -31,6 +32,16 @@
 └──────────────────────────────────────────────────────────────┘
 ```
 
+### 环境层的事实
+
+| 项 | 值 |
+| --- | --- |
+| 形态 | standalone + flakes（**不是** nix-darwin） |
+| 输入 | `nixpkgs-unstable` + `home-manager`，版本由 `flake.lock` 锁定 |
+| 配置 | `homeConfigurations.zephyr`，`aarch64-darwin` |
+| 入口 | `flake.nix`（devShell） → `home.nix`（一切） |
+| 远端 | `https://github.com/dao77777/dotfile.git`，分支 `main` |
+
 ## 设计原则
 
 | 原则 | 具体体现 |
@@ -42,6 +53,9 @@
 
 ## 管 / 不管
 
+本仓库只管**通用 CLI 与 shell 环境**；其余归属见 `GLOBAL_AGENTS.md` 的「归谁管」。
+具体到本仓库，边界是：
+
 | 本仓库管 | 不管（归别人） |
 | --- | --- |
 | CLI 工具、别名、PATH、环境变量 | npm 全局包 → `~/.npm-global` |
@@ -49,13 +63,19 @@
 | 工具的配置文件（git / nvim / direnv…） | dev server 生命周期 → process-compose |
 | 密钥工具的**接线** | 密钥内容本身 → `~/Code/vault` |
 
+## 为什么正本放在 `.config/home-manager/`
+
+三个约束推导出来的：
+
+```
+① 配置必须由 Nix 生成     → 不能直接改 ~/.zshrc（软链，会被覆盖）
+② 必须能跨机器重现         → 要有 git 仓库 + flake
+③ agent 要能读到全局规则   → 各 agent 的全局文件软链到本目录
+
+  ⇒ 本目录同时是「环境正本」和「全局规则正本」，只改这一份
+```
+
 ## 文档怎么组织
 
-```
-docs/
-├── design/       顶层设计：环境应该长成什么样
-├── decision/     落地时的主要矛盾与处理方式
-└── appendix.md   零散备忘：默认知识、边界情况、不确定要不要写的东西
-```
-
-判断标准很简单 —— **"是什么" 进 design，"为什么" 进 decision，"不确定" 进 appendix**。
+`design/` 是什么 · `decision/` 为什么 · `appendix.md` 拿不准 —— 详见 [`docs/README.md`](../README.md)。
+**全机信息**（目录拓扑、归属）不进这里，进 `GLOBAL_AGENTS.md`。

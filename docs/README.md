@@ -9,7 +9,8 @@ docs/
 └── appendix.md    零散备忘（故意不分类）
 ```
 
-**判断一条信息往哪写**：是什么 → `design/`；为什么 → `decision/`；拿不准 → `appendix.md`。
+**判断一条信息往哪写**：**全机信息**（目录拓扑、归属）→ `../GLOBAL_AGENTS.md`；
+是什么 → `design/`；为什么 → `decision/`；拿不准 → `appendix.md`。
 规则在 [`../AGENTS.md`](../AGENTS.md)（本仓库）+ [`../GLOBAL_AGENTS.md`](../GLOBAL_AGENTS.md)（全局）。
 
 ## 顶层设计
@@ -17,7 +18,6 @@ docs/
 | 文档 | 覆盖 | 什么时候看 |
 | --- | --- | --- |
 | [design/overview.md](design/overview.md) | ⭐ 目标、三层结构、设计原则、管/不管 | **先读这篇** |
-| [design/layout.md](design/layout.md) | 目录结构与归属边界 | 不知道某个东西该放哪 |
 | [design/packages.md](design/packages.md) | 装了哪些工具（分类清单） | 想知道有什么可用 |
 | [design/shell.md](design/shell.md) | shell 组织、加载链、别名 | 改 zsh / 别名 |
 | [design/secrets.md](design/secrets.md) | 密钥体系 | 要密钥、换机器 |
