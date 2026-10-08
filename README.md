@@ -1,6 +1,8 @@
 # 当前环境软件清单
 
-> 由 home-manager 管理（`home.nix` 的 `home.packages` + `programs.*` 模块），2026-09-25 整理。
+> home-manager 管理（`home.nix` 的 `home.packages` + `programs.*`），整理日期 2026-10。
+>
+> **本文件只列"装了什么"。** 怎么改、有哪些坑 → [AGENTS.md](AGENTS.md)；为什么这么做 → [docs/](docs/README.md)。
 
 ## 文件系统
 
@@ -50,22 +52,24 @@
 | gh | GitHub CLI |
 | lazygit | Git 终端 TUI |
 | scalar | 巨型仓库加速（随 git 附带） |
-| nodejs | Node.js 通用版（nixpkgs 默认 nodejs，当前 24.x LTS）含 npm/npx/corepack；已被官方 Node 临时覆盖，见备注 |
-| pnpm | Node 包管理器（含 pnpx；由 Nix 独立提供，不依赖 Node 自带工具链） |
+| nodejs | Node.js 通用版（nixpkgs 默认，24.x LTS），含 npm/npx/corepack；**已被官方 Node 临时覆盖** → [docs/runtime-node.md](docs/runtime-node.md) |
+| pnpm | Node 包管理器（含 pnpx；由 Nix 独立提供） → [store 位置](docs/packages-npm-pnpm.md) |
 | yarn-berry | Yarn 4.x（含 yarn/yarnpkg） |
 | bun | Bun 运行时 / 包管理器 / 测试器 |
 | go | Go 工具链 |
 | rustup | Rust 全家桶（rustc/cargo/rust-analyzer/rustfmt/clippy） |
 | nvim | 编辑器 |
 | direnv | 目录级环境自动切换（含 nix-direnv） |
-| sops | 密钥加密（只加密结构化文件的值，密文可入 git）；后端用 age |
-| age | 现代 GPG（含 `age` / `age-keygen`）；私钥在本机 `~/.config/sops/age/keys.txt`，跨机只用公钥 |
+| sops | 密钥加密：只加密结构化文件的值，密文可入 git → [密钥体系](docs/secrets-sops-age.md) |
+| age | 现代 GPG（含 `age` / `age-keygen`）；私钥在本机 `~/.config/sops/age/keys.txt` |
+
+> `go` / `rustup` 目前**无活跃项目使用**（`~/Code` 下都是 TypeScript/JS 项目），装着备用。
 
 ## 进程与服务管理
 
 | 软件 | 用途 |
 |---|---|
-| process-compose | 多进程编排（`process-compose up/down/restart`，带 TUI 日志与状态） |
+| process-compose | 多进程编排（`up` / `down` / `restart`，带 TUI 日志与状态） |
 
 ## Shell 与系统
 
@@ -80,6 +84,7 @@
 
 | 软件 | 用途 |
 |---|---|
+| nix | 包管理器本体 |
 | home-manager | 配置管理器自身 |
 
 ## 别名速查
@@ -104,24 +109,15 @@
 | `ports` | 查看监听端口 | |
 | `reload` | source ~/.zshrc | |
 
-## 备注
+定义在 `home.nix` 的 `programs.zsh.shellAliases` / `initContent`。
 
-- **密钥：sops + age**（跨机器方案见 `~/Code/tmp/docs/sops-age-secrets.md`）
-  - 加密库在 `~/Code/vault`（私有 git），存的是密文；明文永不入库
-  - age 私钥在本机 `~/.config/sops/age/keys.txt`（`chmod 600`），**永不进 git、永不外传**；换机器时只需把新机器的**公钥**加进 `vault/.sops.yaml`
-  - 【macOS 坑】sops 找默认密钥走 Go 的 `os.UserConfigDir()`，darwin 上是 `~/Library/Application Support`，不是 `~/.config`；因此 `home.nix` 里用 `home.sessionVariables.SOPS_AGE_KEY_FILE` 显式指到 `~/.config/sops/age/keys.txt`
-- CLI 全部走 Nix（`~/.nix-profile`），无 Homebrew
-- Node 使用 nixpkgs 通用属性 `nodejs`（当前 24.x LTS），随 nixpkgs-unstable 自动跟随，不再手动指定版本
-- corepack 随 nodejs 24.x 提供；上游自 Node 25+ 起移除
-- **【临时妥协】官方 Node 置顶**：`home.sessionPath` 里 `~/.local/share/node/bin` 排在 `~/.nix-profile/bin` 之前，覆盖 nixpkgs 构建的 `node`（该目录为手动解压的官方 tarball，链到 `node-v24.19.0-darwin-arm64`）
-  - 原因：DeepSeek Harness 源码启动（`pnpm dsh`）依赖原生插件 `node-addon-require-builtin` 扫描 arm64 机器码定位 `PrincipalRealm::builtin_module_require`；nixpkgs 的 cc-wrapper 默认加 `-fno-omit-frame-pointer`，使该 getter 多出栈帧指令，插件匹配失败报 `Unsupported/no-getter`，而官方 Node 省略 frame pointer 可正常工作
-  - 仅覆盖 `node` 解析，Nix 的 `nodejs`/`pnpm` 仍保留；`pnpm` 会从 PATH 取 node 执行脚本
-  - 计划：等 Node 版本升级（或 nixpkgs / `node-addon-require-builtin` 修复）后，先验证 `pnpm dsh` 源码启动不再报错，再删除此条目与 `~/.local/share/node`，回归纯 Nix
-- go / rustup 当前无活跃项目使用（~/Code 下均为 TypeScript/JS 项目）
-- npm 全局包（`~/.npm-global`）独立于 Nix：
-  - opencode-ai
-  - @earendil-works/pi-coding-agent
-- pnpm 包仓库固定为 `~/Library/pnpm/store`，写在 pnpm 自己的全局配置 `~/Library/Preferences/pnpm/config.yaml`（键 `storeDir`）：
-  - 不放进 `.npmrc`：`store-dir` 是 pnpm 专有键，npm 会报 `Unknown user config` 警告
-  - 值必须是绝对路径：`~` 开头会触发 pnpm 的「仓库可写性探测」，探测失败时它会退化为在项目祖先目录另建 `.pnpm-store`（受限环境如 DSH 沙箱下会污染 `~/Code`）
-- nix flake 输入：nixpkgs-unstable + home-manager，2026-09-11 已更新
+## 常用命令
+
+```sh
+home-manager switch            # 应用配置
+command -v <新命令>             # 验证：路径应在 ~/.nix-profile/bin 下
+nixfmt flake.nix               # Nix 文件格式化（RFC 166）
+home-manager news              # 查看未读变更说明
+```
+
+> 本仓库外的运行数据（npm 全局包、pnpm store、age 私钥）见 [docs/layout.md](docs/layout.md)。
