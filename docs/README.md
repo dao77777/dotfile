@@ -2,34 +2,60 @@
 
 本仓库的**决策记录**与**设计说明**。
 
-> `README.md` 只放清单（装了什么、有什么别名），`AGENTS.md` 只放规则（怎么改、别踩什么坑）。
-> **"为什么这么做"全在这里**，别往那两个文件里塞。
+> 规则在 [`../AGENTS.md`](../AGENTS.md)（本仓库）+ [`../GLOBAL_AGENTS.md`](../GLOBAL_AGENTS.md)（全局）；
+> 清单在 [`../README.md`](../README.md)。**"为什么这么做"全在这里。**
+
+## 两个目录
+
+| 目录 | 放什么 | 回答的问题 |
+| --- | --- | --- |
+| [`decision/`](decision/) | 选型、取舍、妥协、代价、复查条件 | *为什么是现在这样？* |
+| [`design/`](design/) | 结构图、数据流、硬规矩、操作步骤 | *它长什么样、怎么用？* |
+
+同题**成对**出现，例如：
+
+```
+decision/secrets-sops-age.md   为什么选 sops + age
+design/secrets-sops-age.md     密钥体系的具体结构与用法
+```
+
+目录名已经表达了类型，**文件名不再加前缀**。
 
 ## 索引
 
-| 文档 | 类型 | 什么时候看 |
-| --- | --- | --- |
-| [layout.md](layout.md) | 设计 | 想知道某个东西该放哪、归谁管 |
-| [shell-config.md](shell-config.md) | 设计 | 改 zsh / 别名 / 加载顺序 |
-| [runtime-node.md](runtime-node.md) | **决策**（临时妥协） | node 版本怪异、`pnpm dsh` 启动失败 |
-| [packages-npm-pnpm.md](packages-npm-pnpm.md) | **决策** | 装全局包、pnpm 报 store 相关错 |
-| [secrets-sops-age.md](secrets-sops-age.md) | **决策 + 设计** | 需要密钥、换机器、加密钥 |
+| 文档 | 什么时候看 |
+| --- | --- |
+| [design/layout.md](design/layout.md) | 想知道某个东西该放哪、归谁管 |
+| [design/shell-config.md](design/shell-config.md) | 改 zsh / 别名 / 加载顺序 |
+| [design/secrets-sops-age.md](design/secrets-sops-age.md) | 要密钥、换机器、加密钥 |
+| [decision/runtime-node.md](decision/runtime-node.md) | node 版本怪异、`pnpm dsh` 启动失败 |
+| [decision/packages-npm-pnpm.md](decision/packages-npm-pnpm.md) | 装全局包、pnpm 报 store 相关错 |
+| [decision/secrets-sops-age.md](decision/secrets-sops-age.md) | 想知道密钥为什么这么放、什么时候该换方案 |
 
-## 决策文档模板
+## 骨架
 
-每篇都用同一套骨架，保证一屏能看完：
+### `decision/`
 
 ```md
-# 标题
-> 状态: 生效中 / 临时妥协（计划移除） / 已废弃
-> 日期: YYYY-MM 起
-> 落点: home.nix 的哪一段 / 哪个文件
+# 决策：<一句话结论>
+> 状态: 生效中 / ⚠️ 临时妥协（计划移除） / 已废弃 · 起始 YYYY-MM · 落点: home.nix 的哪一段
 
 ## 问题        一句话说清要解决什么
-## 决定        最终怎么做的
-## 理由        为什么，含证据（可复现的命令或日志路径）
+## 决定        最终怎么做的（给最小可读的证据：那几行配置 / 那张图）
+## 理由        为什么，含可复现的证据（命令、日志路径）
 ## 代价        这个选择带来的坏处
-## 复查条件    什么情况下该把它推翻
+## 复查条件    什么情况下该把它推翻（含具体回退动作）
 ```
 
-**"复查条件"是最容易被忽略也最重要的一条**——没有它，临时妥协会变成永久负债。
+**"代价"和"复查条件"最容易被忽略，也最重要** —— 没有它们，临时妥协会变成永久负债。
+
+### `design/`
+
+```md
+# 设计：<对象>
+> 状态 · 落点
+
+结构图 → 各层职责表 → 数据流 → 硬规矩
+```
+
+两种都要求**一屏能看完**。

@@ -52,15 +52,15 @@
 | gh | GitHub CLI |
 | lazygit | Git 终端 TUI |
 | scalar | 巨型仓库加速（随 git 附带） |
-| nodejs | Node.js 通用版（nixpkgs 默认，24.x LTS），含 npm/npx/corepack；**已被官方 Node 临时覆盖** → [docs/runtime-node.md](docs/runtime-node.md) |
-| pnpm | Node 包管理器（含 pnpx；由 Nix 独立提供） → [store 位置](docs/packages-npm-pnpm.md) |
+| nodejs | Node.js 通用版（nixpkgs 默认，24.x LTS），含 npm/npx/corepack；**已被官方 Node 临时覆盖** → [docs/decision/runtime-node.md](docs/decision/runtime-node.md) |
+| pnpm | Node 包管理器（含 pnpx；由 Nix 独立提供） → [store 位置](docs/decision/packages-npm-pnpm.md) |
 | yarn-berry | Yarn 4.x（含 yarn/yarnpkg） |
 | bun | Bun 运行时 / 包管理器 / 测试器 |
 | go | Go 工具链 |
 | rustup | Rust 全家桶（rustc/cargo/rust-analyzer/rustfmt/clippy） |
 | nvim | 编辑器 |
 | direnv | 目录级环境自动切换（含 nix-direnv） |
-| sops | 密钥加密：只加密结构化文件的值，密文可入 git → [密钥体系](docs/secrets-sops-age.md) |
+| sops | 密钥加密：只加密结构化文件的值，密文可入 git → [密钥体系](docs/decision/secrets-sops-age.md) |
 | age | 现代 GPG（含 `age` / `age-keygen`）；私钥在本机 `~/.config/sops/age/keys.txt` |
 
 > `go` / `rustup` 目前**无活跃项目使用**（`~/Code` 下都是 TypeScript/JS 项目），装着备用。
@@ -120,4 +120,4 @@ nixfmt flake.nix               # Nix 文件格式化（RFC 166）
 home-manager news              # 查看未读变更说明
 ```
 
-> 本仓库外的运行数据（npm 全局包、pnpm store、age 私钥）见 [docs/layout.md](docs/layout.md)。
+> 本仓库外的运行数据（npm 全局包、pnpm store、age 私钥）见 [docs/design/layout.md](docs/design/layout.md)。
