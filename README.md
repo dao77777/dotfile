@@ -16,8 +16,28 @@ flake.nix / flake.lock     Nix 输入与版本锁定
 home.nix                   全部配置：装包 / 模块 / 别名 / PATH / 环境变量
 GLOBAL_AGENTS.md           全局规则（软链到各 agent）
 AGENTS.md                  本仓库规则
+bootstrap.sh               换机：建软链 + 应用配置
 docs/                      顶层设计与关键决策
 ```
+
+## 换机 / 恢复
+
+新机顺序：装 Nix → `git clone --recurse-submodules <Code>` → 跑本仓库的 bootstrap。
+
+```sh
+cd ~/Code/dotfile
+./bootstrap.sh              # 建软链 + home-manager switch
+./bootstrap.sh --links-only # 只建软链，不跑 home-manager
+```
+
+它幂等地做三件事：
+
+- `~/.config/home-manager` → 本仓库（保留旧路径）
+- 4 条 agent 指令软链 → `GLOBAL_AGENTS.md`
+- `home-manager switch --flake ~/Code/dotfile#zephyr`
+
+⚠️ 不覆盖已存在的实体文件/目录（会跳过并提示）。Nix 一律用真实路径 `~/Code/dotfile`，
+**不要**用 `~/.config/home-manager`（软链）去调，避开 Nix 对软链 flake 路径的坑。
 
 ## 读什么
 
