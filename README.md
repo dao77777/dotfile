@@ -24,6 +24,6 @@ docs/                      顶层设计与关键决策
 | 你是 | 读 |
 | --- | --- |
 | 想装工具 / 改 shell | [`home.nix`](home.nix) + [AGENTS.md](AGENTS.md) |
-| 想知道装了哪些工具 | [`docs/design/packages.md`](docs/design/packages.md) |
-| 想知道**为什么**这么设计 | [`docs/`](docs/README.md)（从 [overview](docs/design/overview.md) 开始） |
+| 想知道装了哪些工具 | [`docs/designs/packages.md`](docs/designs/packages.md) |
+| 想知道**为什么**这么设计 | [`docs/`](docs/README.md)（从 [overview](docs/designs/overview.md) 开始） |
 | agent，且工作目录在别处 | [`GLOBAL_AGENTS.md`](GLOBAL_AGENTS.md) |

@@ -1,6 +1,6 @@
 # 设计：密钥体系
 
-> 顶层设计见 [overview.md](overview.md) · **为什么选 sops + age** 见 [../decision/secrets-sops-age.md](../decision/secrets-sops-age.md)
+> 顶层设计见 [overview.md](overview.md) · **为什么选 sops + age** 见 [../decisions/secrets-sops-age.md](../decisions/secrets-sops-age.md)
 
 ## 结构
 

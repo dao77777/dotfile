@@ -3,7 +3,7 @@
 > **这里故意不分类。** 放的是：默认就该知道的、边界情况、以及"不确定要不要写、但不写又会含糊"的东西
 > （比如"`command -v` 是什么"、macOS 的那几个坑）。
 >
-> 单独堆在一起，是为了让 `design/` 和 `decision/` 保持干净。
+> 单独堆在一起，是为了让 `designs/` 和 `decisions/` 保持干净。
 > **有新东西拿不准就丢这里，不要塞进别的文档。**
 
 ## 常用命令
@@ -23,7 +23,7 @@
 
 | 现象 | 原因 / 对策 |
 | --- | --- |
-| 新加的环境变量"没生效" | `__HM_SESS_VARS_SOURCED` 守卫 → 机制与对策见 [design/shell.md](design/shell.md) 的「加载链」 |
+| 新加的环境变量"没生效" | `__HM_SESS_VARS_SOURCED` 守卫 → 机制与对策见 [designs/shell.md](designs/shell.md) 的「加载链」 |
 | 登录 shell 与普通 shell 行为不同 | 同上（`if [[ ! -o login ]]`） |
 | `switch` 后命令找不到 | 旧 shell 的 `PATH` 是缓存的；开新终端 |
 

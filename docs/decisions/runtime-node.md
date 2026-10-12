@@ -1,6 +1,6 @@
 # 决策：官方 Node 置顶
 
-> ⚠️ **临时妥协，计划移除** · 起始 2026-09 · 所属设计 [packages.md](../design/packages.md) / [shell.md](../design/shell.md) · 落点 `home.nix` 的 `home.sessionPath`
+> ⚠️ **临时妥协，计划移除** · 起始 2026-09 · 所属设计 [packages.md](../designs/packages.md) / [shell.md](../designs/shell.md) · 落点 `home.nix` 的 `home.sessionPath`
 
 ## 矛盾
 

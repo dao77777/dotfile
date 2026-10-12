@@ -1,6 +1,6 @@
 # 决策：npm 全局包与 pnpm store 放哪
 
-> 生效中 · 所属设计 [packages.md](../design/packages.md) · 落点 `programs.npm` + pnpm 自身配置
+> 生效中 · 所属设计 [packages.md](../designs/packages.md) · 落点 `programs.npm` + pnpm 自身配置
 
 ## 矛盾
 

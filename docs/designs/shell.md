@@ -23,7 +23,7 @@
 ```
 home.nix
 ├── home.packages          装哪些 CLI        → packages.md
-├── home.sessionPath       PATH 顺序         ← 有陷阱，见 decision/runtime-node.md
+├── home.sessionPath       PATH 顺序         ← 有陷阱，见 decisions/runtime-node.md
 ├── home.sessionVariables  环境变量（只放"路径"这类非机密值）
 ├── home.activation.*      switch 时跑一次的钩子
 └── programs.zsh
@@ -68,6 +68,6 @@ home.nix
 
 ```sh
 # ① home.nix：home.packages 加包，或 programs.<tool> 加模块
-# ② 同步文档：包 → design/packages.md；别名 → 本文件第四节
+# ② 同步文档：包 → designs/packages.md；别名 → 本文件第四节
 # ③ home-manager switch && command -v <新命令>     # 应在 ~/.nix-profile/bin 下
 ```

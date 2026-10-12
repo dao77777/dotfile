@@ -1,6 +1,6 @@
 # 决策：密钥用 sops + age
 
-> 生效中 · 起始 2026-10 · 所属设计 [secrets.md](../design/secrets.md) · 落点 `home.packages` + `home.sessionVariables`
+> 生效中 · 起始 2026-10 · 所属设计 [secrets.md](../designs/secrets.md) · 落点 `home.packages` + `home.sessionVariables`
 
 ## 矛盾
 
@@ -17,7 +17,7 @@
 ## 处理
 
 **sops + age**：密文进私有 git 仓库，私钥只留本机。结构、命令、硬规矩见
-[design/secrets.md](../design/secrets.md)。
+[designs/secrets.md](../designs/secrets.md)。
 
 本仓库里只有两行 —— 工具 + 一个路径：
 
@@ -62,7 +62,7 @@ sops 找默认私钥用的是 Go 的 os.UserConfigDir()
 | --- | --- |
 | 多一个私有仓库 | 需要自己 push |
 | 明文副本常驻磁盘 | 为了编辑方便而接受的取舍 |
-| 明文/密文可能漂移 | 提交前跑 [漂移检查](../design/secrets.md) |
+| 明文/密文可能漂移 | 提交前跑 [漂移检查](../designs/secrets.md) |
 | **挡不住 agent** | 能跑 shell 的 agent 就能执行 `sops -d`。加密解决的是「git 泄漏 / 磁盘失窃 / 单机吊销」，**不是** LLM 隔离 |
 
 ## 复查条件

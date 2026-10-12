@@ -14,10 +14,10 @@
 
 | 改了什么 | 写哪 |
 | --- | --- |
-| `home.packages` 增删 | [`docs/design/packages.md`](docs/design/packages.md) |
-| 别名、shell 集成、`programs.*` | [`docs/design/shell.md`](docs/design/shell.md) |
-| 一个"为什么这么做"的取舍 | `docs/decision/` 新增一篇 |
-| 结构 / 流程变化 | `docs/design/` 对应文档 |
+| `home.packages` 增删 | [`docs/designs/packages.md`](docs/designs/packages.md) |
+| 别名、shell 集成、`programs.*` | [`docs/designs/shell.md`](docs/designs/shell.md) |
+| 一个"为什么这么做"的取舍 | `docs/decisions/` 新增一篇 |
+| 结构 / 流程变化 | `docs/designs/` 对应文档 |
 
 ## 提交前
 

@@ -1,6 +1,6 @@
 # 设计：装了哪些工具
 
-> 顶层设计见 [overview.md](overview.md) · 落地决策见 [../decision/](../decision/)
+> 顶层设计见 [overview.md](overview.md) · 落地决策见 [../decisions/](../decisions/)
 >
 > 分类原则：**按"用它能干什么"分**，不按它是怎么装的、也不按语言生态。
 > 上游是 `home.nix` 的 `home.packages`，改包时同步本表。
@@ -30,7 +30,7 @@
 
 **注意两处非默认**：
 
-- `node` 实际不是 Nix 那份 → [../decision/runtime-node.md](../decision/runtime-node.md)
+- `node` 实际不是 Nix 那份 → [../decisions/runtime-node.md](../decisions/runtime-node.md)
 - `go` / `rustup` 目前**无活跃项目使用**（`~/Code` 下都是 TS/JS），装着备用
 
 ## 进程与服务
