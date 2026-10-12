@@ -25,7 +25,7 @@ docs/                      顶层设计与关键决策
 新机顺序：装 Nix → `git clone --recurse-submodules <Code>` → 跑本仓库的 bootstrap。
 
 ```sh
-cd ~/Code/dotfile
+cd ~/Code/_dotfile
 ./bootstrap.sh              # 建软链 + home-manager switch
 ./bootstrap.sh --links-only # 只建软链，不跑 home-manager
 ```
@@ -34,9 +34,9 @@ cd ~/Code/dotfile
 
 - `~/.config/home-manager` → 本仓库（保留旧路径）
 - 4 条 agent 指令软链 → `GLOBAL_AGENTS.md`
-- `home-manager switch --flake ~/Code/dotfile#zephyr`
+- `home-manager switch --flake ~/Code/_dotfile#zephyr`
 
-⚠️ 不覆盖已存在的实体文件/目录（会跳过并提示）。Nix 一律用真实路径 `~/Code/dotfile`，
+⚠️ 不覆盖已存在的实体文件/目录（会跳过并提示）。Nix 一律用真实路径 `~/Code/_dotfile`，
 **不要**用 `~/.config/home-manager`（软链）去调，避开 Nix 对软链 flake 路径的坑。
 
 ## 读什么

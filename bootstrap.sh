@@ -5,7 +5,7 @@
 #   ./bootstrap.sh               建软链 + home-manager switch
 #   ./bootstrap.sh --links-only  只建软链，不跑 home-manager
 #
-# 前置：Nix 已装；本仓库已在 ~/Code/dotfile（由 ~/Code 的 submodule 提供）。
+# 前置：Nix 已装；本仓库已在 ~/Code/_dotfile（由 ~/Code 的 submodule 提供）。
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")" && pwd -P)"   # 真实路径（解析软链），勿用 ~/.config/home-manager 调 Nix
