@@ -38,7 +38,7 @@ nixpkgs 的 cc-wrapper 默认全局加 -fno-omit-frame-pointer
 官方 Node 省略 frame pointer → 匹配成功
 ```
 
-证据：`~/Code/deepseek-harness/tmp/dsh-restart.log`（启动失败）、同目录的反汇编对比、
+证据：`~/Code/@deepseek-harness/tmp/dsh-restart.log`（启动失败）、同目录的反汇编对比、
 `pkgs/build-support/cc-wrapper/default.nix`（加该 flag 的依据）。
 
 ## 代价
