@@ -17,9 +17,10 @@
 ~/Code/                        ⭐ 代码工作区
 │   ├── AGENTS.md                  工作区约定（process-compose 编排）
 │   ├── process-compose.yaml       所有 dev server 的统一入口
-│   ├── vault/                     密钥库（私有 git，只存密文）
-│   ├── tmp/                       临时产物与调研文档
-│   └── <project>/                 一个项目一个目录
+│   ├── _vault/                    meta：密钥库（私有 git，只存密文）
+│   ├── _tmp/                      meta：临时产物、调研与试验性项目
+│   ├── _journal/                  meta：每日记录（YYYY-MM-DD.md）
+│   └── <project>/                 长期主力项目（一个项目一个目录）
 │
 ~/.config/<tool>/              工具自己的配置（git / nvim / btop / direnv…）
 ~/.config/sops/age/keys.txt    age 私钥（600，永不外传）
@@ -40,13 +41,15 @@ Library/  Desktop/  …          macOS 自己的，不手动改
 | npm 全局包 | `~/.npm-global`（**不归本仓库**） | —— |
 | 项目依赖、node 版本 | 项目自己的 `flake.nix` | 假设 `node` 来自 Nix |
 | dev server 起停 | `~/Code/process-compose.yaml` | 在 `~/Code` 裸跑 `npm run dev` 常驻 |
-| 密钥、令牌、密码 | `~/Code/vault` | 写进被 git 跟踪的文件；在输出里回显（会进会话记录） |
-| 一次性产物、调研 | `~/Code/tmp/` | 塞进项目仓库 |
+| 密钥、令牌、密码 | `~/Code/_vault` | 写进被 git 跟踪的文件；在输出里回显（会进会话记录） |
+| 一次性产物、调研、试验性项目 | `~/Code/_tmp/` | 塞进项目仓库 |
+| 每日记录 / 工作日志 | `~/Code/_journal/`（`YYYY-MM-DD.md`） | 写进项目仓库 |
 
 ## 通用约定
 
 - 中文回答；代码、标识符保持英文
 - 先读现有约定，再动手，不猜
 - 只改与任务相关的文件
+- `~/Code` 下 **`_` 前缀目录是工作区 meta（`_tmp` `_vault` `_journal`），不是项目**，目录名以 `_` 与普通项目区分
 - 破坏性操作（删除、覆盖、改全局配置）先确认
 - 声称完成前先验证：跑命令，而不是只口头说完成

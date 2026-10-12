@@ -5,7 +5,7 @@
 ## 结构
 
 ```
-┌─ 私有 git 仓库 ── ~/Code/vault ────────────────────────────┐
+┌─ 私有 git 仓库 ── ~/Code/_vault ───────────────────────────┐
 │  env/secrets.enc.yaml     环境变量密文（键名明文可读）      │
 │  keys/*.enc               文件型机密（SSH 私钥、证书）      │
 │  .sops.yaml              只有 age 公钥 → 可以入库           │
@@ -14,7 +14,7 @@
                         ▼
 ┌─ 本机（永不外传）──────────────────────────────────────────┐
 │  ~/.config/sops/age/keys.txt    age 私钥 600               │
-│  ~/Code/vault/env/secrets.yaml  明文副本，仅供编辑         │
+│  ~/Code/_vault/env/secrets.yaml  明文副本，仅供编辑        │
 │                                 600 + gitignore            │
 └────────────────────────────────────────────────────────────┘
                         │ 谁知道自己该用哪把钥匙？
@@ -41,7 +41,7 @@
 ## 操作
 
 ```sh
-cd ~/Code/vault
+cd ~/Code/_vault
 
 # 取用（三种，都不落盘）
 sops -d --extract '["DEEPSEEK_API_KEY"]' env/secrets.enc.yaml   # 单值（输出不带换行）
@@ -71,7 +71,7 @@ sops updatekeys -y env/secrets.enc.yaml && sops updatekeys -y keys/ssh-macbook-a
 **漂移检查**（明文与密文是两个文件，改完忘了封回去，别的机器就会拿到旧值）：
 
 ```sh
-cd ~/Code/vault && diff <(sops -d env/secrets.enc.yaml) env/secrets.yaml   # 无输出 = 一致
+cd ~/Code/_vault && diff <(sops -d env/secrets.enc.yaml) env/secrets.yaml   # 无输出 = 一致
 ```
 
 ## 当前内容

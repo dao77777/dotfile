@@ -61,7 +61,7 @@
 | CLI 工具、别名、PATH、环境变量 | npm 全局包 → `~/.npm-global` |
 | shell 行为与提示符 | 项目依赖与 node 版本 → 项目自带 flake |
 | 工具的配置文件（git / nvim / direnv…） | dev server 生命周期 → process-compose |
-| 密钥工具的**接线** | 密钥内容本身 → `~/Code/vault` |
+| 密钥工具的**接线** | 密钥内容本身 → `~/Code/_vault` |
 
 ## 为什么正本放在 `.config/home-manager/`
 
