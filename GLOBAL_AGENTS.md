@@ -1,7 +1,7 @@
 # GLOBAL_AGENTS.md — 全局规则
 
 > 本机**所有目录**生效，多个 agent 共用同一份。
-> 正本：本文件（`~/.config/home-manager/`，受 git 管理）。**只改这一份，不要改软链另一端。**
+> 正本：本文件（`~/Code/_dotfile/`，受 git 管理）。**只改这一份，不要改软链另一端。**
 > 软链：`~/.pi/agent/AGENTS.md` · `~/.codex/AGENTS.md` · `~/.config/opencode/AGENTS.md` · `~/.claude/CLAUDE.md`
 > 优先级：项目 `AGENTS.md` > `~/Code/AGENTS.md` > **本文件**
 > ⚠️ 本文件被软链到多处，**只能用 `~` 绝对路径，不能用相对链接**。
@@ -9,17 +9,20 @@
 ## 本机拓扑
 
 ```
-~/.config/home-manager/        ⭐ 环境正本：CLI / 别名 / PATH / shell 都由它生成
+~/Code/_dotfile/               ⭐ 环境正本：CLI / 别名 / PATH / shell 都由它生成
 │   ├── home.nix                   全部配置（装包 / 模块 / 别名 / PATH / 环境变量）
 │   ├── GLOBAL_AGENTS.md           本文件
 │   └── docs/                      文档（按生命周期分目录，见「docs/ 目录规则」）
+│      （`~/.config/home-manager` 是它的软链；调 Nix 一律用本路径）
 │
 ~/Code/                        ⭐ 代码工作区
 │   ├── AGENTS.md                  工作区约定（process-compose 编排）
 │   ├── process-compose.yaml       所有 dev server 的统一入口
 │   ├── docs/                      文档（按生命周期分目录，见「docs/ 目录规则」）
 │   ├── _vault/                    meta：密钥库（私有 git，只存密文）
+│   ├── _dotfile/                  meta：home-manager 配置（本文件所在仓库，submodule）
 │   ├── _lab/                      meta：试验性项目与临时产物
+│   ├── _asset/                    meta：本地大文件资产（模型 / 音视频 / 中间产物），不入 git
 │   └── <project>/                 长期主力项目（一个项目一个目录）
 │
 ~/.config/<tool>/              工具自己的配置（git / nvim / btop / direnv…）
@@ -44,18 +47,58 @@ Library/  Desktop/  …          macOS 自己的，不手动改
 | 密钥、令牌、密码 | `~/Code/_vault` | 写进被 git 跟踪的文件；在输出里回显（会进会话记录） |
 | 文档（调研 / 设计 / 决策 / 知识…） | 各自的 `docs/`（工作区级为 `~/Code/docs/`） | 散落在项目根或仓库外 |
 | 试验性项目、一次性产物 | `~/Code/_lab/` | 塞进项目仓库 |
+| 大文件资产（模型权重 / 音视频 / 中间产物） | `~/Code/_asset/` | 进 git、进备份；放**丢信息**的东西（那去 `_lab` / `docs/`） |
 | 每日记录 / 工作日志 | `~/Code/docs/logs/`（`YYYY-MM-DD.md`） | 写进项目仓库 |
+
+## 密钥：统一从 `~/Code/_vault` 取
+
+**任何目录下需要密钥 / 令牌 / 密码（API key、服务器地址、SSH 私钥…）→ 去 `~/Code/_vault` 拿。**
+不要向用户索要，不要在别处找明文，不要凭猜测写占位值。
+
+- `_vault` 是**私有 git 仓库**（`https://github.com/dao77777/vault`），库内只有密文
+  - `env/secrets.enc.yaml` — 全局环境变量（API key、VM 地址、用户名…）
+  - `keys/*.enc` — 文件型机密（SSH 私钥、证书…）
+- 本机 `env/secrets.yaml` 是明文副本（`chmod 600` + `.gitignore`），**仅用于编辑**
+- `SOPS_AGE_KEY_FILE` 已由 home-manager 设好，**新 shell 里 `sops` 零配置可用**
+
+### 取用（按需注入，不要常驻环境变量）
+
+```bash
+cd ~/Code/_vault
+sops -d --extract '["DEEPSEEK_API_KEY"]' env/secrets.enc.yaml   # 取一个（输出不带换行）
+sops exec-env env/secrets.enc.yaml 'your-cmd'                    # 注入进程环境，不落盘
+sops -d --output-type dotenv env/secrets.enc.yaml > <项目>/.env   # 生成 .env（须被 gitignore 挡住）
+sops -d keys/ssh-macbook-air.enc > ~/.ssh/id_ed25519             # 恢复文件型机密
+```
+
+### 增改密钥
+
+```bash
+cd ~/Code/_vault
+$EDITOR env/secrets.yaml                         # 改明文
+sops -e env/secrets.yaml > env/secrets.enc.yaml  # 封回密文
+git add env/secrets.enc.yaml && git commit       # 只提交密文
+```
+
+### 硬规矩（红线）
+
+- ⚠️ **密钥值不得出现在任何输出里**：不要 `echo` / `cat` / 打印，也不要复述到对话里（会进会话记录）
+- **只有 `.enc` 能进 git**；`.sops.yaml` 只含 age 公钥，可以入库
+- age 私钥 `~/.config/sops/age/keys.txt`（本机）：**永不复制、永不提交、永不外传**
+- 项目要密钥时，让**启动命令自己注入**（项目零感知），不要往项目里塞明文
+- 原理、macOS 路径坑与排错 → `~/Code/docs/knowledge/sops-age-secrets.md`
 
 ## 命名：`.` / `_` / `@` 前缀
 
 | 前缀 | 语义 | 谁读写 | 可见性 | 例 |
 | --- | --- | --- | --- | --- |
 | `.` | **工具的领地**：实现细节 / 本地状态，删了可重建 | 工具自动 | `ls` 默认隐藏 | `.git` `.vscode` `.direnv` |
-| `_` | **人的领地**：工作区 meta，是你的资产，但不被当作普通单元 | 你手动 | 默认可见且排最前 | `_lab` `_vault` `_dotfile` |
+| `_` | **人的领地**：工作区 meta，是你的资产，但不被当作普通单元 | 你手动 | 默认可见且排最前 | `_lab` `_vault` `_asset` `_dotfile` |
 | `@` | **别人的领地**：外部仓库（上游 / 参考），只读引用，**你不能 push** | 上游维护 | 默认可见 | `@deepseek-harness` |
 | 无 | 正常内容，或生态保留名（`README.md` `AGENTS.md` `docs/`） | 人 / 双方 | 正常 | `effect-web/` |
 
 - 判据：**这是谁的东西？** 工具的用 `.`，你的 meta 用 `_`，别人的库用 `@`，其余用普通名。
+- `docs/` 内的 `_` 子目录（如 `knowledge/_timelines/`）沿用同一思路：**该类目的规则与索引排最前**，内容按专题分在旁边。
 - 保留名（`README.md` `AGENTS.md` `LICENSE`、`tmp/` 等）的含义与行为由**外部约定**定义、不可改；用前先确认行为与用途一致——`tmp/` 的“易失”契约就不适合要长期保留的内容。
 
 ## docs/ 目录规则
@@ -75,8 +118,9 @@ Library/  Desktop/  …          macOS 自己的，不手动改
 
 - `README.md` 只做**导航**：逐篇列出**链接 + 描述**（覆盖什么、什么时候看），不写规范、不重复正文。
 - 判据（信息往哪写）：**全机拓扑 / 归属 / 命名等规范** → 本文件；**怎么跑 / 有哪些功能** → 仓库根 `README.md`；**agent 动手前必须遵守** → 该层 `AGENTS.md`；其余按上表加工阶段——**原始 → 草稿 → 方案 / 取舍 → 沉淀**。
+- **大件二进制不进 `docs/`**：模型权重、音视频、中间产物这类“删了只损失时间、不损失信息”的东西 → `~/Code/_asset/`。
 - 定稿内容不得滞留 `drafts/`；能被上表某类吸收的，不要塞进 `appendix.md`。
-- 子目录内可再按专题分（如 `knowledge/timelines/`）；`logs/` `progress/` `knowledge/` 用到再建，`designs/` `decisions/` `drafts/` 建议先备好。
+- 子目录内可再按专题分（如 `knowledge/_timelines/`、`knowledge/ai/`）；`logs/` `progress/` `knowledge/` 用到再建，`designs/` `decisions/` `drafts/` 建议先备好。
 - 项目自己的文档放项目 `docs/`，工作区级放 `~/Code/docs/`，共用这一套规则。
 
 ### 写作规范
@@ -115,6 +159,6 @@ Library/  Desktop/  …          macOS 自己的，不手动改
 - 中文回答；代码、标识符保持英文
 - 先读现有约定，再动手，不猜
 - 只改与任务相关的文件
-- `~/Code` 下 **`_` 前缀目录是工作区 meta（`_lab` `_vault`），不是项目**，目录名以 `_` 与普通项目区分
+- `~/Code` 下 **`_` 前缀目录是工作区 meta（`_lab` `_vault` `_asset` `_dotfile`），不是项目**，目录名以 `_` 与普通项目区分
 - 破坏性操作（删除、覆盖、改全局配置）先确认
 - 声称完成前先验证：跑命令，而不是只口头说完成

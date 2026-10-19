@@ -18,6 +18,7 @@
 | 别名、shell 集成、`programs.*` | [`docs/designs/shell.md`](docs/designs/shell.md) |
 | 一个"为什么这么做"的取舍 | `docs/decisions/` 新增一篇 |
 | 结构 / 流程变化 | `docs/designs/` 对应文档 |
+| 新增 / 删除一篇文档 | [`docs/README.md`](docs/README.md) 索引 |
 
 ## 提交前
 

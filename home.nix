@@ -1,4 +1,4 @@
-# ~/.config/home-manager/home.nix
+# home.nix — 正本：~/Code/_dotfile/home.nix
 { config, pkgs, ... }:
 
 {
