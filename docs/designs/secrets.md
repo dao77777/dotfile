@@ -78,6 +78,15 @@ cd ~/Code/_vault && diff <(sops -d env/secrets.enc.yaml) env/secrets.yaml   # �
 
 | 键 | 说明 |
 | --- | --- |
-| `TENCENT_VM_DOMAIN` / `_IP` / `_USERNAME` | 腾讯云 VM 三件套 |
-| `ZAI_API_KEY` / `KIMI_API_KEY` / `DEEPSEEK_API_KEY` | 三个模型的 API key |
-| `keys/ssh-macbook-air.enc` | MacBook Air 的 Ed25519 私钥 |
+| `TENCENT_VM_HOST` / `_HOSTNAME` / `_USERNAME` | 腾讯云 VM（**公钥登录，无密码**） |
+| `FN_EVO4_RK3588_HOST` / `_HOSTNAME` / `_USER` / `_PASSWORD` | 飞牛 fnOS（RK3588） |
+| `MAC_MINI_M6_HOST` / `_HOSTNAME` / `_USER` / `_PASSWORD` | Mac mini（M6） |
+| `ZAI_API_KEY` / `KIMI_API_KEY` / `DEEPSEEK_API_KEY` / `MINIMAX_API_KEY` | 模型 API key |
+| `keys/ssh-macbook-air.enc` | MacBook Air 的 Ed25519 私钥（公钥已授权到腾讯云 VM） |
+
+**`HOST` / `HOSTNAME` 的约定**（两种键同时存在，不是重复）：
+
+| 键 | 内容 | 用途 |
+| --- | --- | --- |
+| `*_HOST` | 当前 IP | 快照，供不支持 mDNS 的场景（容器、其他 Linux、排查） |
+| `*_HOSTNAME` | mDNS/域名全名 | **稳定标识**，DHCP 换 IP 不用改任何东西 |
