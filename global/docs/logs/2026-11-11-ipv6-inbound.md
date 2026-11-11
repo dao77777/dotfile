@@ -78,3 +78,35 @@
 ### 后续
 
 取舍与复查条件见 [../decisions/0001-ipv6-inbound.md](../decisions/0001-ipv6-inbound.md)：当前维持"临时放行 + 手动重放"，重启频繁或要长期对外服务时改用隧道。
+
+### 5. 分工调整：路由器全放开，白名单下移到 NAS
+
+用户把 NAS 的防火墙从"默认允许"改成了"**未匹配→拒绝**"，并让路由器对 NAS 全端口放行。
+
+- 路由器：删掉 4 条按端口的规则，改为 1 条 `-d ::71e/… -j ACCEPT`（全协议全端口）
+- NAS：`rxfallback` 由 `true` → `false`
+
+验证（从本机 `nmap -6`）：
+
+| 端口 | 在 NAS 白名单 | 改前 | 改后 |
+| --- | --- | --- | --- |
+| 22 / 5666 / 42423 … | ✅ | open | open |
+| 49152 | ❌ | open | **filtered** |
+| 9999（无人监听） | ❌ | closed | **filtered** |
+
+`closed → filtered` 是关键信号：前者是主机回 RST，后者是连回应都没有 = 有东西在丢包。
+
+### 6. 意外发现：飞牛的防火墙是 XDP，不是 iptables
+
+查规则时发现 `nft list ruleset` / `ip6tables -S` 里**只有 Docker 的表，一条飞牛的规则都没有**，但端口确实被 drop 了。最后在网卡上看到：
+
+```
+3: enP2p33s0: <...> xdpgeneric ... prog/xdp id 192
+```
+
+→ 飞牛用 **eBPF/XDP 挂在网卡上丢包**，包在进入协议栈之前就没了。所以：
+
+- 查 `iptables`/`nft` 查不到它的规则
+- **`tcpdump` 也抓不到被丢的包**（这条对以后排障很重要）
+
+已沉淀到 [../knowledge/networking-model.md](../knowledge/networking-model.md)「防火墙不一定跑在 iptables 上」。

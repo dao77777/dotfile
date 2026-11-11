@@ -56,6 +56,25 @@ ip6tables -t mangle -A PREROUTING -p tcp --dport 5666 -j RETURN
 ip6tables -t mangle -vnL PREROUTING        # 看 pkts 有没有涨
 ```
 
+## 防火墙不一定跑在 iptables 上
+
+别默认「`iptables -S` 里没规则 = 没过滤」。常见三种实现，排障手段完全不同：
+
+| 实现 | 怎么看 | 被丢的包 `tcpdump` 能看到吗 |
+| --- | --- | --- |
+| netfilter（iptables / nftables） | `ip6tables -S` · `nft list ruleset` | 能 |
+| **XDP / eBPF**（挂在网卡上） | `ip -d link show <iface>` 看 `prog/xdp id` | **看不到**（在协议栈之前就丢了） |
+| 云厂商安全组 / 应用层 | 各自控制台 | 看不到 |
+
+实例：飞牛 NAS 的防火墙是 XDP —— `nft list ruleset` 和 `ip6tables -S` 里一条规则都没有，但端口确实被 drop；只有 `ip -d link show` 能看到 `prog/xdp id 192`。
+
+**一个方便的判据**：端口从 `closed` 变成 `filtered`
+
+- `closed` = 主机回了 RST → 包进了协议栈，只是没人听
+- `filtered` = **连回应都没有** → 有东西在更早的地方丢包
+
+另外注意 **UPnP**：路由器开着 UPnP 时，应用可以自己"打洞"，规则表里看不到，却真的放行了。
+
 ## 两条纪律
 
 **1. 先校准工具，再相信结果。**

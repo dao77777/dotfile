@@ -6,7 +6,7 @@
 
 **能通。** 卡点只有一处：**NX15000 的 `ip6tables` 在 `zone_wan_forward` 末尾挂了 `zone_wan_dest_REJECT`**。光猫是清白的（正常按 PD 路由转发）。
 
-现状（2026-11-11）：已放行 **80 / 22 / 5666 / 5667**，**重启路由器后失效**。
+现状（2026-11-11）：路由器对 NAS **全端口放行**（临时，重启失效），真正的白名单交给 **NAS 自己的 XDP 防火墙**（持久）。
 
 ## 地址从哪来
 
@@ -30,20 +30,26 @@
 | 光猫有 `de61::/64` 的路由 | ✅ 下一跳是 NX15000 的 WAN 链路本地 |
 | 光猫 `ip6tables` | ✅ 策略全 ACCEPT，`IP_FILTER_IN` / `FORWARD_FIREWALL` 空链 |
 | 外部包能到光猫 | ✅ tcpdump 抓到 `2001:41d0:…` → `de61::71e:80`，并从 br0 转出 |
-| NAS 自己的防火墙 | ✅ 飞牛 `fw.conf` `enable: false`，且 `rxfallback: true`（未匹配默认放行） |
+| NAS 自己的防火墙 | ✅ 飞牛 XDP：`enable: true` + `rxfallback: false`（未匹配→拒绝），白名单端口之外的入站被 drop |
 | **NX15000 的转发链** | ❌ `zone_wan_forward` 第 12 条 `zone_wan_dest_REJECT` |
 
-## 放行
-
-在 NX15000 上加规则（`forwarding_wan_rule` 排在 `zone_wan_dest_REJECT` 之前）：
+## 现在怎么分工
 
 ```
-ip6tables -A forwarding_wan_rule -p tcp --dport 5666 -d ::71e/::ffff:ffff:ffff:ffff -j ACCEPT
+路由器（NX15000）  →  对 NAS 全端口放行        ← 临时，重启失效
+NAS（飞牛 XDP）    →  只放 fw.conf 里的白名单   ← 持久，真正把关
+```
+
+路由器上只要一条（`forwarding_wan_rule` 排在 `zone_wan_dest_REJECT` 之前）：
+
+```
+ip6tables -A forwarding_wan_rule -d ::71e/::ffff:ffff:ffff:ffff -j ACCEPT
 ```
 
 - `-d ::71e/::ffff:ffff:ffff:ffff`：掩码只比**后 48 位**，运营商换前缀后规则不用改。
-- 只放需要的端口，别 `-j ACCEPT` 全开。
-- 完整清单见 [../examples/h3c-ipv6-allow.sh](../examples/h3c-ipv6-allow.sh)。
+- 想按端口收窄也可以（`-p tcp --dport 5666`），但当前把细粒度限制放在了 NAS 侧。
+- NAS 侧要点：`fw.conf` 的 `rxfallback` 必须是 `false`（未匹配→拒绝），否则白名单形同虚设。它的实现是 **XDP**，`iptables` / `nft` 里看不到规则。
+- 完整命令见 [../examples/h3c-ipv6-allow.sh](../examples/h3c-ipv6-allow.sh)。
 
 ## 持久化：做不到（有据可查）
 
