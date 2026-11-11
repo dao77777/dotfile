@@ -1,10 +1,12 @@
-# IPv6 公网入站：为什么不通，怎么放行
+# IPv6 公网入站：这套网络的具体事实
 
-> 2026-11 实测结论。设备型号/地址见 [`../../AGENTS.md`](../../AGENTS.md)「网络设备」。
+> 分层模型见 [networking-model.md](networking-model.md) · 设备型号/地址见 [`../../AGENTS.md`](../../AGENTS.md)「网络设备」 · 取舍理由见 [../decisions/0001-ipv6-inbound.md](../decisions/0001-ipv6-inbound.md)
 
 ## 一句话
 
-**能通。** 唯一卡点是 **NX15000 的 `ip6tables` 在 `zone_wan_forward` 末尾挂了一条 `zone_wan_dest_REJECT`**，把所有入站 IPv6 新建连接挡了。**光猫是清白的**（会正常按 PD 路由转发）。
+**能通。** 卡点只有一处：**NX15000 的 `ip6tables` 在 `zone_wan_forward` 末尾挂了 `zone_wan_dest_REJECT`**。光猫是清白的（正常按 PD 路由转发）。
+
+现状（2026-11-11）：已放行 **80 / 22 / 5666 / 5667**，**重启路由器后失效**。
 
 ## 地址从哪来
 
@@ -16,57 +18,52 @@
 | 位置 | IPv6 |
 | --- | --- |
 | 光猫 WAN（ppp0） | `2409:8a60:3007:7da9:edb1:b203:a59f:419f` |
-| 光猫 LAN（br0） | `2409:8a60:3076:de60::/64`，自身 `…:6e9e:7cff:fe0e:d900`，网关 `fe80::1` |
-| NX15000 WAN | `2409:8a60:3076:de60::2/128`，链路本地 `fe80::de65:55ff:fe58:6705` |
-| NX15000 LAN | `2409:8a60:3076:de61::/64`，自身 `de61::1` |
+| 光猫 LAN（br0） | `…:de60::/64`，自身 `…:6e9e:7cff:fe0e:d900`，网关 `fe80::1` |
+| NX15000 WAN | `…:de60::2/128`，链路本地 `fe80::de65:55ff:fe58:6705` |
+| NX15000 LAN | `…:de61::/64`，自身 `de61::1` |
 | 光猫里的 PD 路由 | `de61::/64 via fe80::de65:55ff:fe58:6705 dev br0` ✅ |
 
-**PD（Prefix Delegation）只做"分配地址"，数据面要靠路由。** 这两层在这里都没问题：
+## 卡在哪一层
 
 | 检查项 | 结果 |
 | --- | --- |
-| 光猫有没有 `de61::/64` 的路由 | ✅ 有，下一跳是 NX15000 的 WAN 链路本地 |
-| 光猫 `ip6tables` 策略 | ✅ 全 `ACCEPT`，`IP_FILTER_IN` / `FORWARD_FIREWALL` 都是空链 |
-| 外部包能不能到光猫 | ✅ tcpdump 抓到 `2001:41d0:…` → `de61::71e:80`，并从 br0 转出 |
-| NX15000 的转发链 | ❌ `zone_wan_forward` 第 12 条 `zone_wan_dest_REJECT` |
+| 光猫有 `de61::/64` 的路由 | ✅ 下一跳是 NX15000 的 WAN 链路本地 |
+| 光猫 `ip6tables` | ✅ 策略全 ACCEPT，`IP_FILTER_IN` / `FORWARD_FIREWALL` 空链 |
+| 外部包能到光猫 | ✅ tcpdump 抓到 `2001:41d0:…` → `de61::71e:80`，并从 br0 转出 |
+| NAS 自己的防火墙 | ✅ 飞牛 `fw.conf` `enable: false`，且 `rxfallback: true`（未匹配默认放行） |
+| **NX15000 的转发链** | ❌ `zone_wan_forward` 第 12 条 `zone_wan_dest_REJECT` |
 
 ## 放行
 
 在 NX15000 上加规则（`forwarding_wan_rule` 排在 `zone_wan_dest_REJECT` 之前）：
 
 ```
-ip6tables -A forwarding_wan_rule -p tcp --dport 80 -d ::71e/::ffff:ffff:ffff:ffff -j ACCEPT
+ip6tables -A forwarding_wan_rule -p tcp --dport 5666 -d ::71e/::ffff:ffff:ffff:ffff -j ACCEPT
 ```
 
-- `-d ::71e/::ffff:ffff:ffff:ffff`：掩码只比**后 48 位**，所以运营商换前缀后规则不用改。
-- 只放需要的端口，别 `-j ACCEPT` 全开——那等于把整台设备裸放到公网。
-- ⚠️ **重启失效**（规则在内存里）。
+- `-d ::71e/::ffff:ffff:ffff:ffff`：掩码只比**后 48 位**，运营商换前缀后规则不用改。
+- 只放需要的端口，别 `-j ACCEPT` 全开。
+- 完整清单见 [../examples/h3c-ipv6-allow.sh](../examples/h3c-ipv6-allow.sh)。
 
-## 验证（有个大坑）
+## 持久化：做不到（有据可查）
 
-`https://ipv6-test.com/json/webserver.php?url=<host>:<port>&scheme=http` 能从外部发起 TCP，是当时唯一能用的外部视角。**但它 `url` 里的端口会被忽略，永远只连 80**：
+| 依据 | 内容 |
+| --- | --- |
+| H3C 官方《关闭 IPv6 防火墙》文档 | 结尾原话：「重启路由器后此命令会失效，需要重新关闭」 |
+| H3C 知了社区 | 有人建议加 `ip6tables-save`，回复「**这个方法没用**」 |
+| 恩山（RC3000/NX30 同固件族） | 「试了 crontab 和 `/etc/rc.local`，**连这个重启都会清空**」；其 `mount` 输出与本机一致 |
+| 本机 `/mnt` | 只有 `bak cfg custom factorybackup …`，**没有 `config` / `backup` 目录** |
+| 本机 `/mnt/cfg/startup` | 有 `@vserver`（IPv4 端口映射，**所以 v4 能持久**）· **无任何 `firewall` / `ip6` / `acl` 段** |
 
-| 探测 | 返回 | 说明 |
-| --- | --- | --- |
-| `NAS:80`（放行前） | `Connection refused` | H3C 的 REJECT |
-| `NAS:80`（放行后） | `{"server":"nginx"}` | ✅ 通 |
-| `NAS:9999`（无人监听） | `{"server":"nginx"}` | ⚠️ 证明端口被忽略 |
+根因：`/` 是 `overlayfs:/tmp/root`，**upper 在内存**。不是"不会存"，是固件**没实现这个配置项**（`IsSupport_FireWall = 0`，整个防火墙页面被跳过）。
 
-→ **判断非 80 端口是否开放，不能用这个接口**，要用真机（手机流量）或其他工具。
+> 网上流传的 `cp /etc/config/firewall /mnt/config/` + 删 `cfgmd5` 校验，只适用于**有 `/mnt/config` 的型号**（NX30Pro 系）。NX15000 没有该目录，同族的 NX54 用户也没解决。
 
-校准探针是否可信的最低要求：先打一个已知目标。`2606:4700:4700::1111` 应返回 `{"server":"cloudflare"}`。
-
-## 持久化：这台做不到
-
-NX15000 的 `/` 是 `overlayfs:/tmp/root`（**upper 在内存**），`/etc` 改动重启即失；闪存上的配置是厂商格式的 `/mnt/cfg/startup`（`key=value`，**不是 shell 脚本**），没有用户扩展钩子，`/mnt/config/firewall` 在这台上不存在（那是 NX15 的布局）。
-
-→ **结论：重启路由器后规则会消失，需要手动重加。** 命令见 [../examples/h3c-ipv6-allow.sh](../examples/h3c-ipv6-allow.sh)。
-
-想要一次到位，只能换边界设备（能管 IPv6 防火墙的路由器 / OpenWrt），或者改用隧道（Tailscale / Cloudflare Tunnel）——隧道天然扛重启。
+→ 每次重启需手动重放。想一劳永逸见 [../decisions/0001-ipv6-inbound.md](../decisions/0001-ipv6-inbound.md)。
 
 ## 还要注意
 
-- **前缀会变**：`de60::/60` 是运营商动态发的，重启光猫/换拨号都可能换。直连必须配 DDNS。
-- **后缀**：`::71e` 来自 DHCPv6（DUID 派生，稳定）；SLAAC 那个 `e04a:b425:a83f:b259` 随前缀变。临时地址（`temporary`）会轮换，别拿来做服务地址。
-- **端口要选对**：NAS 的 80 只是 `302 → http://[addr]:5666/`（飞牛 UI 在 **5666** HTTP / **5667** HTTPS）。只放行 80 的话，浏览器会跳到没放行的 5666 → 表现为"打不开"。要么放行 5666/5667，要么直接访问带端口的 URL。
-- **安全**：IPv6 是可直接路由的公网地址，不经过 NAT。放行就是真的暴露，服务本身要有强认证/TLS；优先只放 VPN 端口，其余走 VPN 回家。
+- **端口要选对**：NAS 的 80 只是 `302 → http://[addr]:5666/`（飞牛 UI 在 **5666** HTTP / **5667** HTTPS）。只放行 80 的话浏览器会跳到没放行的 5666 → 表现为"打不开"。
+- **前缀会变**：`de60::/60` 是运营商动态发的，重启光猫/重拨都可能换 → 直连必须配 DDNS。
+- **后缀**：`::71e` 来自 DHCPv6（DUID 派生，稳定）；SLAAC 那个随前缀变；`temporary` 地址会轮换，别拿来做服务地址。
+- **安全**：IPv6 不经 NAT，放行就是真的暴露到公网。服务本身要有强认证/TLS；优先只放 VPN 端口，其余走 VPN 回家。

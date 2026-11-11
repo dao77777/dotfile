@@ -42,3 +42,39 @@
 | 光猫 | `/tmp` 抓包 | 已删 |
 | 光猫 | 超密 `CMCCAdmin/aDm8H%MdA` 登录尝试 | 失败（`login_result=4`），未做任何修改 |
 | `_vault` | 新增 `ONT_*` / `ONT_PPPOE_*` / `ONT_MAC` / `ONT_TELNET_*` / `ROUTER_*` | 已提交 |
+
+## 追加（同日稍晚）
+
+### 1. 「通了」是假象：80 只是 302 到 5666
+
+用户反馈"好像没搞定"。复查发现：NAS 的 80 由 nginx `return 302 $scheme://$host:5666$request_uri` 跳转，**飞牛 UI 实际在 5666（HTTP）/ 5667（HTTPS）**。
+
+- 之前只放行了 80 → 浏览器拿到 302 后跳到没放行的 5666 → 白屏/超时
+- 外部探针只看 HTTP 状态码，302 也算成功 → 所以我误报"通了"
+
+补放行 5666 / 5667，本机走 IPv6 验证均 `200`。
+
+> 教训：**"探针能连上" ≠ "用户能用"**。要跟到最终页面，别停在第一个成功响应。
+
+### 2. 持久化：查证后确认做不到
+
+查了 H3C 官方文档、知了社区、恩山同固件族（RC3000/NX30）的帖子，并在本机核对：
+
+- 官方文档自己写着「重启后此命令会失效」；知了社区 `ip6tables-save` 被回复"没用"
+- 恩山有人试过 `crontab` 和 `/etc/rc.local`，重启一样被清 —— 因为 `/` 是 `overlayfs:/tmp/root`，upper 在内存
+- 本机 `/mnt` 没有 `config`/`backup` 目录（`/mnt/config/firewall` 是 NX15 的布局，不能照抄）
+- 本机 `/mnt/cfg/startup` 有 `@vserver`（IPv4 端口映射，所以 v4 持久）却**没有任何 firewall / ip6 段** → 结构上就没地方放
+
+### 3. 概念澄清（用户提问触发）
+
+- **IPv4 / IPv6 端口不是分开管的**，分开的是"地址族 + 防火墙/NAT 规则"：v4 走 NAT 映射，v6 只做放行；`iptables` 与 `ip6tables` 是独立的表
+- **防火墙是"多道门"**：光猫 / 路由器 / 目标主机各有一把锁，外层的门不放行，内层开多大都没用
+- **飞牛的防火墙默认放行**：`fw.conf` 里 `enable:false` 且 `rxfallback:true`，即便打开也是"未匹配即放行"，不是 `policy DROP`
+
+### 4. 工具
+
+按 `home.nix` 装了 `mtr` / `nmap` / `iperf3` / `wireshark-cli` / `socat` / `httpie`，同步到 `docs/designs/packages.md`。
+
+### 后续
+
+取舍与复查条件见 [../decisions/0001-ipv6-inbound.md](../decisions/0001-ipv6-inbound.md)：当前维持"临时放行 + 手动重放"，重启频繁或要长期对外服务时改用隧道。
