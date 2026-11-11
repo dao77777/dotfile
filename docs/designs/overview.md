@@ -1,7 +1,7 @@
 # 顶层设计
 
 > ⭐ **先读这篇。**其余 design 文档都是它的展开；decision 文档是落地时对它的取舍。
-> 本机目录拓扑（全机信息）在 `~/.config/home-manager/GLOBAL_AGENTS.md`。
+> 本机目录拓扑（全机信息）在 `~/.config/home-manager/global/AGENTS.md`。
 
 ## 目标（按优先级）
 
@@ -47,13 +47,13 @@
 | 原则 | 具体体现 |
 | --- | --- |
 | **环境归 Nix，业务归项目** | 本仓库只装通用 CLI；项目依赖一律进项目自己的 `flake.nix` |
-| **正本唯一，其余皆指针** | dotfile 是软链、`GLOBAL_AGENTS.md` 是软链、文档相互引用而非复制 |
+| **正本唯一，其余皆指针** | dotfile 是软链、`global/AGENTS.md` 是软链、文档相互引用而非复制 |
 | **宁可显式多写一行** | 例：`SOPS_AGE_KEY_FILE` 显式指路，因为 macOS 默认路径反直觉 |
 | **妥协必须留痕** | 临时方案进 `decisions/`，且必须写「代价」与「复查条件」 |
 
 ## 管 / 不管
 
-本仓库只管**通用 CLI 与 shell 环境**；其余归属见 `GLOBAL_AGENTS.md` 的「归谁管」。
+本仓库只管**通用 CLI 与 shell 环境**；其余归属见 `global/AGENTS.md` 的「归谁管」。
 具体到本仓库，边界是：
 
 | 本仓库管 | 不管（归别人） |
@@ -78,4 +78,4 @@
 ## 文档怎么组织
 
 `designs/` 是什么 · `decisions/` 为什么 · `appendix.md` 拿不准 —— 详见 [`docs/README.md`](../README.md)。
-**全机信息**（目录拓扑、归属）不进这里，进 `GLOBAL_AGENTS.md`。
+**全机信息**（目录拓扑、归属）不进这里，进 `global/AGENTS.md`。

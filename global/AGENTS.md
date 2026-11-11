@@ -1,18 +1,35 @@
-# GLOBAL_AGENTS.md — 全局规则
+# AGENTS.md — 全局规则
 
 > 本机**所有目录**生效，多个 agent 共用同一份。
-> 正本：本文件（`~/Code/_dotfile/`，受 git 管理）。**只改这一份，不要改软链另一端。**
+> 正本：本文件（`~/Code/_dotfile/global/`，受 git 管理）。**只改这一份，不要改软链另一端。**
 > 软链：`~/.pi/agent/AGENTS.md` · `~/.codex/AGENTS.md` · `~/.config/opencode/AGENTS.md` · `~/.claude/CLAUDE.md`
 > 优先级：项目 `AGENTS.md` > `~/Code/AGENTS.md` > **本文件**
 > ⚠️ 本文件被软链到多处，**只能用 `~` 绝对路径，不能用相对链接**。
+
+## ⚠️ 硬规矩：没有硬规矩
+
+本文件、任何项目 `AGENTS.md`、任何设计文档里的「规则 / 硬规矩 / 别做什么 / 红线」，都是**当前有效的约定**，不是不可动的法律。
+**唯一能称为硬规矩的，是这一句：没有硬规矩。**
+
+| 情形 | 怎么做 |
+| --- | --- |
+| 条文与它写的理由冲突 | **理由优先**；顺手把条文改成与理由一致 |
+| 找到更好的做法 | 直接改；把**代价**与**复查条件**写进 `docs/decisions/`，别默默违反 |
+| 条文已经过时 | 删掉它，不要留着「以防万一」 |
+| 想用「规矩这么写的」当理由 | 这不是理由。说清它当初防的是什么，再判断那件事还成不成立 |
+| 用户/上层明确要求绕开某条 | 照做，同时把这条标成 superseded，别留两份相反的说法 |
+
+判断标准只有一条：**改完之后，下一个人能不能从文档里看出为什么这样改**。看不出，就是改坏了，而不是改错了。
 
 ## 本机拓扑
 
 ```
 ~/Code/_dotfile/               ⭐ 环境正本：CLI / 别名 / PATH / shell 都由它生成
 │   ├── home.nix                   全部配置（装包 / 模块 / 别名 / PATH / 环境变量）
-│   ├── GLOBAL_AGENTS.md           本文件
-│   └── docs/                      文档（按生命周期分目录，见「docs/ 目录规则」）
+│   ├── global/                    ⭐ 全机信息
+│   │   ├── AGENTS.md              本文件
+│   │   └── docs/                  全机 / 网络排障文档
+│   └── docs/                      本仓库（CLI / shell 环境）自身的设计与决策
 │      （`~/.config/home-manager` 是它的软链；调 Nix 一律用本路径）
 │
 ~/Code/                        ⭐ 代码工作区
@@ -34,6 +51,33 @@
 ~/.pi/  ~/.codex/  ~/.opencode/ agent 运行数据
 Library/  Desktop/  …          macOS 自己的，不手动改
 ```
+
+## 主机清单
+
+我拥有的主机。**凭据一律从 `~/Code/_vault` 取，不写在这里、不写进项目**（键名见「取用」）。
+
+| 主机 | 地址 | 系统 | 角色 / 备注 |
+| --- | --- | --- | --- |
+| **MacBook Air**（本机） | `192.168.124.4`（Wi-Fi）· `zephyrdeMacBook-Air.local` | macOS | 日常开发机；登录用户 `zephyr`；`~/Code` 在这台；**SSH 未开**（要用时在系统设置里开「远程登录」） |
+| **飞牛 NAS** `FN-EVO4-RK3588` | `192.168.124.7` · 别名 `fn` / `fn.local` · `FN-EVO4-RK3588.local` | Debian 12（fnOS） | 存储 / 常开服务；`smb`(445) + `ssh`(22)，用户 `admin`；Samba `netbios aliases = fn` + avahi 服务 `avahi-alias-fn.service` 发布 `fn.local` |
+| **Mac mini M6** `Mac-mini-M6` | `192.168.124.17`（**只走网线**，Wi-Fi 已关）· `Mac-mini-M6.local` | macOS | 第二台 Mac；登录用户 `zephyr`；`smb` + `ssh` 都开 |
+| **腾讯云 VM** | 地址 / 账号见 `_vault` 的 `TENCENT_VM_*` | Linux | 公网机器（用途以实际部署为准） |
+
+- 局域网网段 `192.168.124.0/24`，网关 `192.168.124.1`（是 NX15000，不是光猫）；主机名走 mDNS（`.local`），不依赖路由器 DNS。
+- vault 键：`FN_EVO4_RK3588_{HOST,USER,PASSWORD}`、`MAC_MINI_M6_{HOST,HOSTNAME,USER,PASSWORD}`、`TENCENT_VM_*`、`ONT_*`、`ROUTER_*`。
+- 改主机 IP 时**三处一起改**：`_vault`（`sops -e` 封回）、这里的表、`~/.ssh/config`（若有）。
+- ⚠️ **别把密码 / 私钥写进本文件或任何入库文件**——本文件的软链到处都在（pi / codex / opencode / claude）。
+
+### 网络设备（两层，别搞混）
+
+| 设备 | 管理地址 | 型号 | 固件 / 硬件 | 网络 |
+| --- | --- | --- | --- | --- |
+| **光猫**（中国移动，重庆） | `192.168.1.1` | FiberHome **HG6543C4**（智能家庭网关类型3） | 软件 `RP0104` · 硬件 `BM.V3.0` · SN `EC8AC7-FHTT520ED900` | GPON（OLT 厂家 HWTC）；PPPoE 上网，IPv4 为运营商 CGNAT；LAN `192.168.1.0/24` + IPv6 `2409:8a60:3076:de60::/64` |
+| **路由器** | `192.168.124.1` · `fe80::124` | H3C Magic **NX15000** | 软件 `NX15000V100R006` · Bootrom `100` · 硬件 `VER.A` · SN `219801A3HN723CK500NG` | LAN `192.168.124.0/24` + IPv6 `2409:8a60:3076:de61::/64`；WAN `192.168.1.2` / `de60::2` |
+
+- 出口顺序：`终端 → NX15000 → 光猫 → 移动`。IPv6 `/60` 由光猫向运营商取，再 PD 一个 `/64` 给 NX15000。
+- 凭据：一律见 `_vault`（`ONT_*` 含 PPPoE 账密与 telnet 后门密码、`ROUTER_*`）。
+- 这两台的排障过程、IPv6 入站放行方法、工具坑：见 `~/Code/_dotfile/global/docs/`，**不写在本文件**。
 
 ## 归谁管 · 别做什么
 
@@ -113,6 +157,7 @@ git add env/secrets.enc.yaml && git commit       # 只提交密文
 | `decisions/` | 取舍：为什么这么定（背景 / 选项 / 决定 / 后果） | 一旦接受即冻结，改动另开一条 supersede |
 | `progress/` | 当前状态快照：现在到哪了；历史留在 `logs/` | 覆盖式 |
 | `knowledge/` | 沉淀知识：事情怎么运作，稳定、答案型 | 稳定 |
+| `examples/` | 示例：可运行的最小样板 / 用法片段（能直接抄的那种，不是教程） | 随 API / 接口变化更新 |
 | `README.md` | **全部文档的索引**：链接 + 一句话描述 | 随文档增删 |
 | `appendix.md` | 服务于其它文档的补充（术语表 / 来源 / 索引） | —— |
 
@@ -120,7 +165,8 @@ git add env/secrets.enc.yaml && git commit       # 只提交密文
 - 判据（信息往哪写）：**全机拓扑 / 归属 / 命名等规范** → 本文件；**怎么跑 / 有哪些功能** → 仓库根 `README.md`；**agent 动手前必须遵守** → 该层 `AGENTS.md`；其余按上表加工阶段——**原始 → 草稿 → 方案 / 取舍 → 沉淀**。
 - **大件二进制不进 `docs/`**：模型权重、音视频、中间产物这类“删了只损失时间、不损失信息”的东西 → `~/Code/_asset/`。
 - 定稿内容不得滞留 `drafts/`；能被上表某类吸收的，不要塞进 `appendix.md`。
-- 子目录内可再按专题分（如 `knowledge/_timelines/`、`knowledge/ai/`）；`logs/` `progress/` `knowledge/` 用到再建，`designs/` `decisions/` `drafts/` 建议先备好。
+- 子目录内可再按专题分（如 `knowledge/_timelines/`、`knowledge/ai/`）；`logs/` `progress/` `knowledge/` `examples/` 用到再建，`designs/` `decisions/` `drafts/` 建议先备好。
+- `examples/` 只收**能跑 / 能抄**的完整片段（含它需要的输入与环境说明），不放「怎么用」的讲解——讲解归 `knowledge/`，方案归 `designs/`。
 - 项目自己的文档放项目 `docs/`，工作区级放 `~/Code/docs/`，共用这一套规则。
 
 ### 写作规范

@@ -19,10 +19,10 @@ LINKS_ONLY=0
 # ⚠️ 不要放 home.nix 已经生成的东西（~/.zshrc 等），否则两边打架。
 links=(
   ".|$HOME/.config/home-manager"
-  "GLOBAL_AGENTS.md|$HOME/.pi/agent/AGENTS.md"
-  "GLOBAL_AGENTS.md|$HOME/.codex/AGENTS.md"
-  "GLOBAL_AGENTS.md|$HOME/.config/opencode/AGENTS.md"
-  "GLOBAL_AGENTS.md|$HOME/.claude/CLAUDE.md"
+  "global/AGENTS.md|$HOME/.pi/agent/AGENTS.md"
+  "global/AGENTS.md|$HOME/.codex/AGENTS.md"
+  "global/AGENTS.md|$HOME/.config/opencode/AGENTS.md"
+  "global/AGENTS.md|$HOME/.claude/CLAUDE.md"
 )
 
 link() {  # src dst

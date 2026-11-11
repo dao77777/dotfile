@@ -1,6 +1,6 @@
 # docs
 
-本仓库的**顶层设计**与**关键决策**。分类、写作规范与骨架见 [`../GLOBAL_AGENTS.md`](../GLOBAL_AGENTS.md)「docs/ 目录规则」。
+本仓库的**顶层设计**与**关键决策**。分类、写作规范与骨架见 [`../global/AGENTS.md`](../global/AGENTS.md)「docs/ 目录规则」。
 
 ## 顶层设计
 

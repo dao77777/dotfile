@@ -1,6 +1,6 @@
 # AGENTS.md — home-manager 仓库
 
-> **仅本目录生效。** 全局规则见 [`GLOBAL_AGENTS.md`](GLOBAL_AGENTS.md) —— 那份才是软链到各 agent 的。
+> **仅本目录生效。** 全局规则见 [`global/AGENTS.md`](global/AGENTS.md) —— 那份才是软链到各 agent 的。
 
 ## 改 `home.nix` 的三步
 
