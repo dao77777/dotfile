@@ -56,6 +56,14 @@
 
     # ── Shell 与系统 ──
     pfetch
+
+    # ── 网络调试 ──
+    mtr           # traceroute + 持续丢包统计
+    nmap          # 端口/服务扫描（附带 ncat / nping）
+    iperf3        # 带宽实测
+    wireshark-cli # tshark：抓包协议解码（抓包权限仍靠 sudo）
+    socat         # 端口转发 / 模拟服务端
+    httpie        # curl 的人话版（http / https 命令）
   ];
 
   # ══════════════════════════════════════

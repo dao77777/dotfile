@@ -39,6 +39,19 @@
 | --- | --- |
 | `process-compose` | 多进程编排：`up` / `down` / `process restart` / `process logs`，带 TUI |
 
+## 网络调试
+
+| 场景 | 工具 |
+| --- | --- |
+| 路径 / 丢包 | `mtr`（需 `sudo`：macOS 上要 raw socket）· 系统自带 `ping`/`ping6`/`traceroute6` |
+| 端口 / 服务 | `nmap`（附 `ncat` / `nping`）· 系统自带 `nc` |
+| 抓包 | `tshark` / `dumpcap`（随 `wireshark-cli`，抓包要 `sudo`）· 系统自带 `tcpdump` |
+| 带宽 | `iperf3` |
+| 连接 / 转发 | `socat`（端口转发、模拟服务端） |
+| HTTP | `http` / `https`（httpie）· `curl` |
+
+> 排查思路与踩过的坑见 [../../global/docs/knowledge/ipv6-inbound.md](../../global/docs/knowledge/ipv6-inbound.md)。
+
 ## Shell 与系统
 
 | 工具 | 用途 |
