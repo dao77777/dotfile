@@ -56,26 +56,17 @@ ip6tables -A forwarding_wan_rule -p tcp --dport 80 -d ::71e/::ffff:ffff:ffff:fff
 
 校准探针是否可信的最低要求：先打一个已知目标。`2606:4700:4700::1111` 应返回 `{"server":"cloudflare"}`。
 
-## 持久化
+## 持久化：这台做不到
 
-NX15000 是 OpenWrt fw3 二次开发，开机把 `/mnt/config/firewall` 复制成 `/etc/config/firewall` 再加载。所以要把规则写成 fw3 语法加进 `/mnt/config/firewall`：
+NX15000 的 `/` 是 `overlayfs:/tmp/root`（**upper 在内存**），`/etc` 改动重启即失；闪存上的配置是厂商格式的 `/mnt/cfg/startup`（`key=value`，**不是 shell 脚本**），没有用户扩展钩子，`/mnt/config/firewall` 在这台上不存在（那是 NX15 的布局）。
 
-```
-config rule 'allow_nas_http'
-    option name 'Allow NAS HTTP'
-    option family 'ipv6'
-    option proto 'tcp'
-    option src 'wan'
-    option dest 'lan'
-    option dest_ip '::71e/-64'
-    option dest_port '80'
-    option target 'ACCEPT'
-```
+→ **结论：重启路由器后规则会消失，需要手动重加。** 命令见 [../examples/h3c-ipv6-allow.sh](../examples/h3c-ipv6-allow.sh)。
 
-`/opt/upt/...` 那套是光猫的 LXC 路径，别混。
+想要一次到位，只能换边界设备（能管 IPv6 防火墙的路由器 / OpenWrt），或者改用隧道（Tailscale / Cloudflare Tunnel）——隧道天然扛重启。
 
 ## 还要注意
 
 - **前缀会变**：`de60::/60` 是运营商动态发的，重启光猫/换拨号都可能换。直连必须配 DDNS。
 - **后缀**：`::71e` 来自 DHCPv6（DUID 派生，稳定）；SLAAC 那个 `e04a:b425:a83f:b259` 随前缀变。临时地址（`temporary`）会轮换，别拿来做服务地址。
+- **端口要选对**：NAS 的 80 只是 `302 → http://[addr]:5666/`（飞牛 UI 在 **5666** HTTP / **5667** HTTPS）。只放行 80 的话，浏览器会跳到没放行的 5666 → 表现为"打不开"。要么放行 5666/5667，要么直接访问带端口的 URL。
 - **安全**：IPv6 是可直接路由的公网地址，不经过 NAT。放行就是真的暴露，服务本身要有强认证/TLS；优先只放 VPN 端口，其余走 VPN 回家。

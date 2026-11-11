@@ -22,28 +22,21 @@ nc -z "$ROUTER" "$TELNET_PORT"
 
 # 进 debugshell 后执行：
 cat <<'SHELL'
-ip6tables -A forwarding_wan_rule -p tcp --dport 80 -d ::71e/::ffff:ffff:ffff:ffff -j ACCEPT
-ip6tables -A forwarding_wan_rule -p tcp --dport 22 -d ::71e/::ffff:ffff:ffff:ffff -j ACCEPT
+ip6tables -A forwarding_wan_rule -p tcp --dport 80   -d ::71e/::ffff:ffff:ffff:ffff -j ACCEPT
+ip6tables -A forwarding_wan_rule -p tcp --dport 22   -d ::71e/::ffff:ffff:ffff:ffff -j ACCEPT
+ip6tables -A forwarding_wan_rule -p tcp --dport 5666 -d ::71e/::ffff:ffff:ffff:ffff -j ACCEPT
+ip6tables -A forwarding_wan_rule -p tcp --dport 5667 -d ::71e/::ffff:ffff:ffff:ffff -j ACCEPT
 ip6tables -nL forwarding_wan_rule --line     # 核对
 SHELL
 
 # 撤销：
 #   ip6tables -D forwarding_wan_rule -p tcp --dport 80 -d ::71e/::ffff:ffff:ffff:ffff -j ACCEPT
 
-# ── 3. 持久化（fw3 规则，开机生效）──────────────────────────────────
-# 规则文件在闪存：/mnt/config/firewall（开机复制成 /etc/config/firewall）
-# 在文件末尾追加，然后 reboot：
-cat <<'CONF'
-config rule 'allow_nas_http'
-    option name 'Allow NAS HTTP'
-    option family 'ipv6'
-    option proto 'tcp'
-    option src 'wan'
-    option dest 'lan'
-    option dest_ip '::71e/-64'
-    option dest_port '80'
-    option target 'ACCEPT'
-CONF
+# ── 3. 持久化：NX15000 做不到 ──────────────────────────────────────
+# / 是 overlayfs:/tmp/root，upper 在内存 → /etc 改动重启即失。
+# 闪存上的 /mnt/cfg/startup 是厂商 key=value 配置，不是 shell，别往里塞命令。
+# /mnt/config/firewall 在这台上不存在（那是 NX15 的布局）。
+# → 重启后重跑第 2 步。想一劳永逸：换能管 IPv6 防火墙的路由器，或用隧道。
 
 # ── 4. 验证 ────────────────────────────────────────────────────────
 # ⚠️ ipv6-test.com 的探针忽略端口，永远只连 80；非 80 端口要用手机流量实测
